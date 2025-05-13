@@ -1,0 +1,125 @@
+<div class="modal-header">
+    <h4 class="modal-title">Update Publishing Company</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="publisherForm" (ngSubmit)="onSubmit()">
+      <div class="alert alert-danger" *ngIf="formError">{{ formError }}</div>
+      
+      <div class="mb-3">
+        <label for="companyName" class="form-label">Company Name *</label>
+        <input 
+          type="text" 
+          class="form-control" 
+          id="companyName" 
+          formControlName="companyName"
+          [ngClass]="{'is-invalid': formSubmitted && publisherForm.get('companyName')?.errors}"
+        >
+        <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('companyName')?.errors?.['required']">
+          Company name is required
+        </div>
+      </div>
+      
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="officialEmail" class="form-label">Official Email *</label>
+          <input 
+            type="email" 
+            class="form-control" 
+            id="officialEmail" 
+            formControlName="officialEmail"
+            [ngClass]="{'is-invalid': formSubmitted && publisherForm.get('officialEmail')?.errors}"
+          >
+          <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('officialEmail')?.errors?.['required']">
+            Official email is required
+          </div>
+          <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('officialEmail')?.errors?.['email']">
+            Please enter a valid email
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label for="companyRegistrationNo" class="form-label">Registration No *</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="companyRegistrationNo" 
+            formControlName="companyRegistrationNo"
+            [ngClass]="{'is-invalid': formSubmitted && publisherForm.get('companyRegistrationNo')?.errors}"
+          >
+          <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('companyRegistrationNo')?.errors?.['required']">
+            Registration number is required
+          </div>
+        </div>
+      </div>
+      
+      <h5 class="section-title">Person In Charge (PIC) Details</h5>
+      
+      <div class="mb-3">
+        <label for="picName" class="form-label">PIC Name *</label>
+        <input 
+          type="text" 
+          class="form-control" 
+          id="picName" 
+          formControlName="picName"
+          [ngClass]="{'is-invalid': formSubmitted && publisherForm.get('picName')?.errors}"
+        >
+        <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('picName')?.errors?.['required']">
+          PIC name is required
+        </div>
+      </div>
+      
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="picEmail" class="form-label">PIC Email *</label>
+          <input 
+            type="email" 
+            class="form-control" 
+            id="picEmail" 
+            formControlName="picEmail"
+            [ngClass]="{'is-invalid': formSubmitted && publisherForm.get('picEmail')?.errors}"
+          >
+          <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('picEmail')?.errors?.['required']">
+            PIC email is required
+          </div>
+          <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('picEmail')?.errors?.['email']">
+            Please enter a valid email
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label for="picTelNo" class="form-label">PIC Telephone No *</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="picTelNo" 
+            formControlName="picTelNo"
+            [ngClass]="{'is-invalid': formSubmitted && publisherForm.get('picTelNo')?.errors}"
+          >
+          <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('picTelNo')?.errors?.['required']">
+            PIC telephone number is required
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-3">
+        <label for="picPosition" class="form-label">PIC Position *</label>
+        <input 
+          type="text" 
+          class="form-control" 
+          id="picPosition" 
+          formControlName="picPosition"
+          placeholder="e.g., Publishing Manager, Director"
+          [ngClass]="{'is-invalid': formSubmitted && publisherForm.get('picPosition')?.errors}"
+        >
+        <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('picPosition')?.errors?.['required']">
+          PIC position is required
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="activeModal.dismiss()">Cancel</button>
+    <button type="button" class="btn btn-primary" (click)="onSubmit()" [disabled]="loading">
+      <span class="spinner-border spinner-border-sm me-1" *ngIf="loading"></span>
+      Update Publisher
+    </button>
+  </div>

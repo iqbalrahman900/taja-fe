@@ -1,0 +1,223 @@
+<!-- src/app/songwriter/update-songwriter/update-songwriter.component.html -->
+<div class="modal-header">
+    <h4 class="modal-title">Update Songwriter</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="songwriterForm" (ngSubmit)="onSubmit()">
+      <div class="alert alert-danger" *ngIf="formError">{{ formError }}</div>
+      
+      <div class="mb-3">
+        <label for="name" class="form-label">Full Name *</label>
+        <input 
+          type="text" 
+          class="form-control" 
+          id="name" 
+          formControlName="name"
+          [ngClass]="{'is-invalid': formSubmitted && songwriterForm.get('name')?.errors}"
+        >
+        <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('name')?.errors?.['required']">
+          Name is required
+        </div>
+      </div>
+      
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="email" class="form-label">Email *</label>
+          <input 
+            type="email" 
+            class="form-control" 
+            id="email" 
+            formControlName="email"
+            [ngClass]="{'is-invalid': formSubmitted && songwriterForm.get('email')?.errors}"
+          >
+          <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('email')?.errors?.['required']">
+            Email is required
+          </div>
+          <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('email')?.errors?.['email']">
+            Please enter a valid email
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label for="contactNumber" class="form-label">Contact Number *</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="contactNumber" 
+            formControlName="contactNumber"
+            [ngClass]="{'is-invalid': formSubmitted && songwriterForm.get('contactNumber')?.errors}"
+          >
+          <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('contactNumber')?.errors?.['required']">
+            Contact number is required
+          </div>
+        </div>
+      </div>
+      
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="icNumber" class="form-label">IC Number</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="icNumber" 
+            formControlName="icNumber"
+            placeholder="Enter IC number"
+          >
+        </div>
+        <div class="col-md-6">
+          <label for="dateOfBirth" class="form-label">Date of Birth *</label>
+          <input 
+            type="date" 
+            class="form-control" 
+            id="dateOfBirth" 
+            formControlName="dateOfBirth"
+            [ngClass]="{'is-invalid': formSubmitted && songwriterForm.get('dateOfBirth')?.errors}"
+          >
+          <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('dateOfBirth')?.errors?.['required']">
+            Date of birth is required
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-3">
+        <label class="form-label">Pen Names *</label>
+        <div formArrayName="penNames">
+          <div class="input-group mb-2" *ngFor="let penName of penNames.controls; let i = index" [formGroupName]="i">
+            <input 
+              type="text" 
+              class="form-control" 
+              formControlName="name"
+              placeholder="Pen name"
+              [ngClass]="{'is-invalid': formSubmitted && penNames.at(i).get('name')?.errors}"
+            >
+            <div class="input-group-text">
+              <input class="form-check-input mt-0" type="checkbox" formControlName="isActive">
+              <span class="ms-1">Active</span>
+            </div>
+            <button 
+              type="button" 
+              class="btn btn-outline-danger" 
+              (click)="removePenName(i)"
+              [disabled]="penNames.length === 1"
+            >
+              <i class="fa fa-trash"></i>
+            </button>
+            <div class="invalid-feedback" *ngIf="formSubmitted && penNames.at(i).get('name')?.errors?.['required']">
+              Pen name is required
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="addPenName()">
+            <i class="bi bi-plus-circle me-1"></i> Add Another Pen Name
+          </button>
+        </div>
+      </div>
+      
+      <div class="mb-3" formGroupName="contract">
+        <label class="form-label">Contract Details</label>
+        <div class="row mb-2">
+          <div class="col-md-6">
+            <label for="contractType" class="form-label">Contract Type *</label>
+            <select 
+              class="form-select" 
+              id="contractType" 
+              formControlName="type"
+              [ngClass]="{'is-invalid': formSubmitted && songwriterForm.get('contract.type')?.errors}"
+            >
+              <option value="">Select Type</option>
+              <option value="Exclusive">Exclusive</option>
+              <option value="Non-exclusive">Non-exclusive</option>
+              <option value="Single">Single</option>
+              <option value="Co-publishing">Co-publishing</option>
+            </select>
+            <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('contract.type')?.errors?.['required']">
+              Contract type is required
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label for="startDate" class="form-label">Start Date *</label>
+            <input 
+              type="date" 
+              class="form-control" 
+              id="startDate" 
+              formControlName="startDate"
+              [ngClass]="{'is-invalid': formSubmitted && songwriterForm.get('contract.startDate')?.errors}"
+            >
+            <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('contract.startDate')?.errors?.['required']">
+              Start date is required
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <label for="endDate" class="form-label">End Date</label>
+            <input type="date" class="form-control" id="endDate" formControlName="endDate">
+          </div>
+          <div class="col-md-6">
+            <label for="terms" class="form-label">Terms</label>
+            <textarea class="form-control" id="terms" rows="2" formControlName="terms"></textarea>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-3">
+        <label for="deal" class="form-label">Deal Information</label>
+        <textarea class="form-control" id="deal" rows="2" formControlName="deal" 
+          placeholder="e.g., 50% publishing royalties"></textarea>
+      </div>
+      
+      <div class="mb-3" formGroupName="heir">
+        <label class="form-label">Heir (Waris) Information</label>
+        <div class="row mb-2">
+          <div class="col-md-6">
+            <label for="heirName" class="form-label">Name *</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="heirName" 
+              formControlName="name"
+              [ngClass]="{'is-invalid': formSubmitted && songwriterForm.get('heir.name')?.errors}"
+            >
+            <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('heir.name')?.errors?.['required']">
+              Heir name is required
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label for="heirContact" class="form-label">Contact Number *</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="heirContact" 
+              formControlName="contactNumber"
+              [ngClass]="{'is-invalid': formSubmitted && songwriterForm.get('heir.contactNumber')?.errors}"
+            >
+            <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('heir.contactNumber')?.errors?.['required']">
+              Contact number is required
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12">
+            <label for="relationship" class="form-label">Relationship *</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="relationship" 
+              formControlName="relationship"
+              placeholder="e.g., Spouse, Child, Parent"
+              [ngClass]="{'is-invalid': formSubmitted && songwriterForm.get('heir.relationship')?.errors}"
+            >
+            <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('heir.relationship')?.errors?.['required']">
+              Relationship is required
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="activeModal.dismiss()">Cancel</button>
+    <button type="button" class="btn btn-primary" (click)="onSubmit()" [disabled]="loading">
+      <span class="spinner-border spinner-border-sm me-1" *ngIf="loading"></span>
+      Update Songwriter
+    </button>
+  </div>

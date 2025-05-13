@@ -1,0 +1,278 @@
+/* src/app/login/login.component.scss */
+
+// Main container
+.login-container {
+  height: 100vh;
+  overflow: hidden;
+}
+
+// Left side with illustration
+.illustration-side {
+  background-color: #1a2c56;
+  color: white;
+  height: 100vh;
+  position: relative;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.navigation {
+  display: flex;
+  gap: 1.5rem;
+  z-index: 2;
+}
+
+.nav-link {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-weight: 500;
+  
+  &:hover {
+    color: white;
+  }
+}
+
+.illustration-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.15;
+  background-image: url('/assets/images/music-notes.png');
+  background-size: cover;
+  background-position: center;
+}
+
+.music-info {
+  z-index: 2;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.platform-logo {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  
+  i {
+    background: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+.music-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.music-subtitle {
+  font-size: 1rem;
+  letter-spacing: 2px;
+  opacity: 0.8;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 2;
+  margin-top: 2rem;
+}
+
+.profile-pic {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+}
+
+.profile-pic-menu {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
+.profile-info {
+  font-weight: 500;
+}
+
+.profile-subtitle {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+// Right side with login form
+.login-side {
+  display: flex;
+  flex-direction: column;
+  padding: 3rem 2rem;
+  background-color: white;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.language-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  align-self: flex-end;
+  cursor: pointer;
+  margin-bottom: 2rem;
+}
+
+.flag-icon {
+  width: 20px;
+  height: 15px;
+  object-fit: cover;
+}
+
+.logo {
+  text-align: center;
+  margin-bottom: 3rem;
+  
+  .company-logo {
+    height: 40px;
+  }
+}
+
+.welcome-text {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.sub-welcome-text {
+  color: #777;
+  margin-bottom: 2rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-control {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(26, 44, 86, 0.2);
+    border-color: #1a2c56;
+  }
+}
+
+.forgot-password {
+  color: #1a2c56;
+  font-size: 0.9rem;
+  text-decoration: none;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.login-btn {
+  background: linear-gradient(135deg, #1a2c56 0%, #3a4c76 100%);
+  color: white;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-weight: 500;
+  
+  &:hover {
+    background: linear-gradient(135deg, #0f1d3d 0%, #2e3c5e 100%);
+    color: white;
+  }
+  
+  &:disabled {
+    opacity: 0.7;
+  }
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #777;
+  margin: 2rem 0;
+  
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  &::before {
+    margin-right: 1rem;
+  }
+  
+  &::after {
+    margin-left: 1rem;
+  }
+}
+
+.sso-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: white;
+  border: 1px solid #ddd;
+  color: #444;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-weight: 500;
+  margin-bottom: 2rem;
+  
+  &:hover {
+    background-color: #f8f8f8;
+  }
+  
+  .sso-icon {
+    height: 20px;
+  }
+}
+
+.social-icons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: auto;
+  padding-top: 2rem;
+}
+
+.social-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f3f4f6;
+  color: #444;
+  text-decoration: none;
+  
+  &:hover {
+    background-color: #1a2c56;
+    color: white;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 767.98px) {
+  .illustration-side {
+    display: none;
+  }
+  
+  .login-side {
+    width: 100%;
+  }
+}

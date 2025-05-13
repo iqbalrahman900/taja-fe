@@ -1,0 +1,52 @@
+<!-- src/app/add-distribution-modal/add-distribution-modal.component.html -->
+<ng-template #content let-modal>
+    <div class="modal-header">
+      <h4 class="modal-title">Add Distribution for {{ catalog?.title }}</h4>
+      <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-info" role="alert">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        Adding a new distribution will automatically deactivate any current active distribution.
+      </div>
+      
+      <form [formGroup]="distributionForm">
+        <div class="mb-3">
+          <label for="distributor" class="form-label">Distributor Name <span class="text-danger">*</span></label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="distributor" 
+            formControlName="distributor"
+            [ngClass]="{'is-invalid': distributionForm.get('distributor')?.invalid && distributionForm.get('distributor')?.touched}">
+          <div class="invalid-feedback" *ngIf="distributionForm.get('distributor')?.errors?.['required']">
+            Distributor name is required
+          </div>
+        </div>
+  
+        <div class="mb-3">
+          <label for="startDate" class="form-label">Start Date <span class="text-danger">*</span></label>
+          <input 
+            type="date" 
+            class="form-control" 
+            id="startDate" 
+            formControlName="startDate"
+            [ngClass]="{'is-invalid': distributionForm.get('startDate')?.invalid && distributionForm.get('startDate')?.touched}">
+          <div class="invalid-feedback" *ngIf="distributionForm.get('startDate')?.errors?.['required']">
+            Start date is required
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-light" (click)="modal.close()">Cancel</button>
+      <button 
+        type="button" 
+        class="btn btn-primary" 
+        [disabled]="distributionForm.invalid || loading"
+        (click)="onSubmit()">
+        <span class="spinner-border spinner-border-sm me-1" *ngIf="loading"></span>
+        Add Distribution
+      </button>
+    </div>
+  </ng-template>

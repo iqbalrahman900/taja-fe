@@ -1,0 +1,40 @@
+<div class="modal-header">
+    <h4 class="modal-title">Update Tag</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="tagForm" (ngSubmit)="onSubmit()">
+      <div class="alert alert-danger" *ngIf="formError">{{ formError }}</div>
+      
+      <div class="mb-3">
+        <label for="categoryName" class="form-label">Category Name *</label>
+        <input 
+          type="text" 
+          class="form-control" 
+          id="categoryName" 
+          formControlName="categoryName"
+          [ngClass]="{'is-invalid': formSubmitted && tagForm.get('categoryName')?.errors}"
+        >
+        <div class="invalid-feedback" *ngIf="formSubmitted && tagForm.get('categoryName')?.errors?.['required']">
+          Category name is required
+        </div>
+      </div>
+      
+      <div class="mb-3 form-check">
+        <input 
+          type="checkbox" 
+          class="form-check-input" 
+          id="isActive" 
+          formControlName="isActive"
+        >
+        <label class="form-check-label" for="isActive">Active</label>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="activeModal.dismiss()">Cancel</button>
+    <button type="button" class="btn btn-primary" (click)="onSubmit()" [disabled]="loading">
+      <span class="spinner-border spinner-border-sm me-1" *ngIf="loading"></span>
+      Update Tag
+    </button>
+  </div>

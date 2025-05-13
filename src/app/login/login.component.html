@@ -1,0 +1,111 @@
+<!-- src/app/login/login.component.html -->
+<div class="login-container">
+  <div class="row g-0">
+    <!-- Left side - Music Illustration -->
+    <div class="col-md-8 illustration-side">
+      <div class="navigation">
+        <a href="#" class="nav-link">Music Library</a>
+        <a href="#" class="nav-link">Artists</a>
+        <a href="#" class="nav-link">Support</a>
+      </div>
+      
+      <div class="illustration-bg"></div>
+      
+      <div class="music-info">
+        <!-- <div class="platform-logo">
+          <i class="fas fa-music"></i>
+        </div> -->
+       <img src="assets/taja.png" alt="Music Admin" class="profile-pic-menu">
+        <div class="music-title">MUSIC CATALOG<br>LIBRARY TASB</div>
+        <div class="music-subtitle">MANAGE YOUR MUSIC RIGHTS AND ROYALTIES</div>
+      </div>
+      
+      <div class="user-profile">
+        <!-- <img src="assets/taja.png" alt="Music Admin" class="profile-pic"> -->
+        <div class="profile-info">
+          <!-- <div>Admin Team</div> -->
+          <!-- <div class="profile-subtitle">TASB Management</div> -->
+        </div>
+      </div>
+    </div>
+    
+    <!-- Right side - Login form -->
+    <div class="col-md-4 login-side">
+      <div class="language-selector">
+        <img src="assets/en.png" alt="English" class="flag-icon">
+        <span>EN</span>
+        <i class="fas fa-chevron-down"></i>
+      </div>
+      
+      <!-- <div class="logo">
+        <img src="assets/taja.png" alt="TASB" class="company-logo">
+      </div> -->
+      
+      <h1 class="welcome-text">Music Management</h1>
+      <p class="sub-welcome-text">Log in to access your music catalog</p>
+      
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <!-- Username field -->
+        <div class="form-group">
+          <input
+            type="text"
+            formControlName="username"
+            class="form-control"
+            [ngClass]="{ 'is-invalid': submitted && f['username'].errors }"
+            placeholder="Username"
+          />
+          <div *ngIf="submitted && f['username'].errors" class="invalid-feedback">
+            <div *ngIf="f['username'].errors['required']">Username is required</div>
+          </div>
+        </div>
+        
+        <!-- Password field -->
+        <div class="form-group">
+          <input
+            type="password"
+            formControlName="password"
+            class="form-control"
+            [ngClass]="{ 'is-invalid': submitted && f['password'].errors }"
+            placeholder="Password"
+          />
+          <div *ngIf="submitted && f['password'].errors" class="invalid-feedback">
+            <div *ngIf="f['password'].errors['required']">Password is required</div>
+          </div>
+        </div>
+        
+        <!-- Remember me checkbox -->
+        <div class="form-check">
+          <input 
+            type="checkbox" 
+            class="form-check-input" 
+            id="rememberMe" 
+            formControlName="rememberMe">
+          <label class="form-check-label" for="rememberMe">Remember me</label>
+        </div>
+        
+        <div class="text-end mt-2">
+          <a href="#" class="forgot-password">Forgot password?</a>
+        </div>
+        
+        <!-- Submit button -->
+        <div class="d-grid mt-4">
+          <button type="submit" class="btn login-btn" [disabled]="loading">
+            <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
+            Login
+          </button>
+        </div>
+      </form>
+      
+  
+      
+    
+      
+      <div class="social-icons">
+        <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+        <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+        <a href="#" class="social-icon"><i class="fab fa-spotify"></i></a>
+      </div>
+    </div>
+  </div>
+</div>

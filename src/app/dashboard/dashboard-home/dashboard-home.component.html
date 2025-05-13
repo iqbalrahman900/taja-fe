@@ -1,0 +1,181 @@
+<!-- Dashboard Content -->
+<div class="content-wrapper">
+  <div class="row">
+    <div class="col-md-6 col-lg-3 mb-4">
+      <div class="stats-card">
+        <div class="stats-icon">🎵</div>
+        <div class="stats-info">
+          <div class="stats-number">{{ totalMontage }}</div>
+          <div class="stats-title">Montage Songs</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3 mb-4">
+      <div class="stats-card">
+        <div class="stats-icon">🎵</div>
+        <div class="stats-info">
+          <div class="stats-number">{{ totalCommercial }}</div>
+          <div class="stats-title">Commercial Songs</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3 mb-4">
+      <div class="stats-card">
+        <div class="stats-icon">🎵</div>
+        <div class="stats-info">
+          <div class="stats-number">{{ totalJingle }}</div>
+          <div class="stats-title">Jingle</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3 mb-4">
+      <div class="stats-card">
+        <div class="stats-icon">🎵</div>
+        <div class="stats-info">
+          <div class="stats-number">{{ totalMusicScoring }}</div>
+          <div class="stats-title">Music Scoring</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+      <div class="stats-card">
+        <div class="stats-icon">👥</div>
+        <div class="stats-info">
+          <div class="stats-number">{{ totalSongwriters }}</div>
+          <div class="stats-title">Songwriter</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3 mb-4">
+      <div class="stats-card">
+        <div class="stats-icon">👥</div>
+        <div class="stats-info">
+          <div class="stats-number">{{ totalOriginalPublishers }}</div>
+          <div class="stats-title">Original Publisher</div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="col-md-6 col-lg-3 mb-4">
+      <div class="stats-card">
+        <div class="stats-icon">⚠️</div> <!-- Changed emoji to warning symbol -->
+        <div class="stats-info">
+          <div class="stats-number">{{ statusCounts.conflict || 0 }}</div> 
+          <div class="stats-title">Conflict Songs</div>
+        </div>
+        <div class="stats-badge conflict" *ngIf="statusCounts.conflict > 0">Needs Review</div> <!-- Added a badge for visibility -->
+      </div>
+    </div>
+    
+    <!-- <div class="col-md-6 col-lg-3 mb-4">
+      <div class="stats-card">
+        <div class="stats-icon">💰</div>
+        <div class="stats-info">
+          <div class="stats-number">RM 8,450</div>
+          <div class="stats-title">Monthly Revenue</div>
+        </div>
+      </div>
+    </div> -->
+    
+    <div class="col-md-6 col-lg-3 mb-4">
+      <div class="stats-card">
+        <div class="stats-icon">🔄</div>
+        <div class="stats-info">
+          <div class="stats-number">{{ totalPendingApprovals }}</div>
+          <div class="stats-title">Pending Approvals</div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+  
+  <div class="row">
+    <div class="col-lg-8 mb-4">
+      <div class="content-card">
+        <div class="card-header">
+          <h2>Recent Activity</h2>
+        </div>
+        <div class="card-body">
+          <table class="activity-table">
+            <thead>
+              <tr>
+                <th>Song</th>
+                <th>Artist</th>
+                <th>Action</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Cinta Abadi</td>
+                <td>Iqbal</td>
+                <td>Registration</td>
+                <td>15/03/2025</td>
+              </tr>
+              <tr>
+                <td>Cinta Abadi (Remix)</td>
+                <td>Iqbal ft. DJ Kito</td>
+                <td>Version Created</td>
+                <td>17/03/2025</td>
+              </tr>
+              <tr>
+                <td>Memories of You</td>
+                <td>Rahman</td>
+                <td>Registration</td>
+                <td>18/03/2025</td>
+              </tr>
+              <tr>
+                <td>Summer Days</td>
+                <td>MusikaGroup Band</td>
+                <td>Distribution Change</td>
+                <td>20/03/2025</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-lg-4 mb-4">
+      <div class="content-card">
+        <div class="card-header">
+          <h2>Top SongWriter </h2>
+        </div>
+        <div class="card-body">
+          <div class="performer-item">
+            <div class="performer-rank">1</div>
+            <div class="performer-info">
+              <div class="performer-name">Cinta Abadi</div>
+              <div class="performer-artist">Iqbal</div>
+            </div>
+            <div class="performer-stats">RM 4,800</div>
+          </div>
+          
+          <div class="performer-item">
+            <div class="performer-rank">2</div>
+            <div class="performer-info">
+              <div class="performer-name">Memories of You</div>
+              <div class="performer-artist">Rahman</div>
+            </div>
+            <div class="performer-stats">RM 3,200</div>
+          </div>
+          
+          <div class="performer-item">
+            <div class="performer-rank">3</div>
+            <div class="performer-info">
+              <div class="performer-name">Summer Days</div>
+              <div class="performer-artist">MusikaGroup Band</div>
+            </div>
+            <div class="performer-stats">RM 2,100</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

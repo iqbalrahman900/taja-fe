@@ -1,0 +1,426 @@
+<div class="content-wrapper">
+  <div class="content-card">
+    <!-- Header section remains the same -->
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap flex-md-nowrap">
+      <h5 class="mb-0 me-3">Registered Publishing Companies</h5>
+      <div class="d-flex align-items-center ms-auto flex-wrap gap-2">
+        <div class="input-group me-2" style="width: 300px;">
+          <input 
+            type="text" 
+            class="form-control" 
+            placeholder="Search publishers..." 
+            [(ngModel)]="searchTerm"
+            (keyup.enter)="onSearch()">
+          <button class="btn btn-outline-secondary" type="button" (click)="onSearch()">
+            <i class="fa fa-search"></i>
+          </button>
+        </div>
+        <button class="btn btn-primary" (click)="openAddModal(addPublisherModal)">
+          <i class="bi bi-plus-circle me-1"></i> Add Publisher
+        </button>
+      </div>
+    </div>
+    
+    
+    <!-- Table section remains the same -->
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th style="width: 40px" class="text-center"></th>
+              <th>Company Name</th>
+              <th>Official Email</th>
+              <th>Registration No</th>
+              <th>PIC Name</th>
+              <th>PIC Position</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="loading">
+              <td colspan="7" class="text-center">Loading...</td>
+            </tr>
+            <tr *ngIf="!loading && publishers.length === 0">
+              <td colspan="7" class="text-center">No publishing companies found</td>
+            </tr>
+    
+            <ng-container *ngFor="let publisher of publishers; let i = index">
+              <tr>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-light" (click)="toggleDetailView(i)">
+                    <i class="fa" [ngClass]="expandedRows[i] ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                  </button>
+                </td>
+                <td class="text-wrap" [title]="publisher.companyName">{{ publisher.companyName }}</td>
+                <td class="text-wrap" [title]="publisher.officialEmail">{{ publisher.officialEmail }}</td>
+                <td class="text-wrap" [title]="publisher.companyRegistrationNo">{{ publisher.companyRegistrationNo }}</td>
+                <td class="text-wrap" [title]="publisher.picName">{{ publisher.picName }}</td>
+                <td class="text-wrap" [title]="publisher.picPosition">{{ publisher.picPosition }}</td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-outline-primary me-1" (click)="toggleDetailView(i)">
+                    <i class="fa fa-eye"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary me-1" (click)="openUpdateModal(publisher)">
+                    <i class="fa fa-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="confirmDelete(publisher)">
+                    <i class="fa fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+    
+              <tr *ngIf="expandedRows[i]">
+                <td colspan="7" class="border-0 p-0">
+                  <div class="detail-view p-3 mb-3 bg-light rounded border">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <h5 class="text-primary mb-3">Company Details</h5>
+                        <div class="mb-2"><strong>Company Name:</strong> {{ publisher.companyName }}</div>
+                        <div class="mb-2"><strong>Official Email:</strong> {{ publisher.officialEmail }}</div>
+                        <div class="mb-2"><strong>Registration Number:</strong> {{ publisher.companyRegistrationNo }}</div>
+                        <div class="mb-2"><strong>TIN Number:</strong> {{ publisher.tinNumber }}</div>
+                        <div class="mb-2"><strong>Address:</strong> {{ publisher.address }}</div>
+                        <div class="mb-2" *ngIf="publisher.deal">
+                          <strong>Deal Information:</strong> {{ publisher.deal }}
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <h5 class="text-primary mb-3">Person In Charge (PIC) Details</h5>
+                        <div class="mb-2"><strong>Name:</strong> {{ publisher.picName }}</div>
+                        <div class="mb-2"><strong>Position:</strong> {{ publisher.picPosition }}</div>
+                        <div class="mb-2"><strong>Email:</strong> {{ publisher.picEmail }}</div>
+                        <div class="mb-2"><strong>Telephone:</strong> {{ publisher.picTelNo }}</div>
+                      </div>
+                    </div>
+    
+                    <div class="row mt-3" *ngIf="publisher.contract">
+                      <div class="col-12">
+                        <h5 class="text-primary mb-3">Contract Information</h5>
+                        <div class="row">
+                          <div class="col-md-6">
+                            <div class="mb-2"><strong>Contract Type:</strong> {{ publisher.contract.type }}</div>
+                            <div class="mb-2"><strong>Start Date:</strong> {{ publisher.contract.startDate | date:'mediumDate' }}</div>
+                            <div class="mb-2" *ngIf="publisher.contract.endDate">
+                              <strong>End Date:</strong> {{ publisher.contract.endDate | date:'mediumDate' }}
+                            </div>
+                          </div>
+                          <div class="col-md-6">
+                            <div class="mb-2">
+                              <strong>Status:</strong> 
+                              <span class="badge" [ngClass]="publisher.contract.isActive ? 'bg-success' : 'bg-danger'">
+                                {{ publisher.contract.isActive ? 'Active' : 'Inactive' }}
+                              </span>
+                            </div>
+                            <div class="mb-2" *ngIf="publisher.contract.terms">
+                              <strong>Terms:</strong> {{ publisher.contract.terms }}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+    
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+    
+      <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="totalPublishers > 0">
+        <div>
+          Showing {{ (currentPage - 1) * pageSize + 1 }} to 
+          {{ currentPage * pageSize > totalPublishers ? totalPublishers : currentPage * pageSize }}
+          of {{ totalPublishers }} entries
+        </div>
+        <ngb-pagination
+          [collectionSize]="totalPublishers"
+          [(page)]="currentPage"
+          [pageSize]="pageSize"
+          [maxSize]="5"
+          [rotate]="true"
+          [boundaryLinks]="true"
+          (pageChange)="onPageChange($event)">
+        </ngb-pagination>
+      </div>
+    </div>
+    
+    
+  </div>
+</div>
+
+<ng-template #addPublisherModal let-modal>
+  <div class="modal-header ">
+    <h4 class="modal-title">Add New Publishing Company</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="publisherForm" (ngSubmit)="onSubmit()">
+      <!-- Error Alert -->
+      <div class="alert alert-danger" *ngIf="formError">{{ formError }}</div>
+      
+      <!-- Company Information Card -->
+      <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">Company Information</h5>
+          <small class="text-muted">Fields marked with <span class="text-danger">*</span> are required</small>
+        </div>
+        <div class="card-body">
+          <!-- Company Name -->
+          <div class="mb-3">
+            <label for="companyName" class="form-label">Company Name <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="companyName" 
+              formControlName="companyName"
+              [ngClass]="{'is-invalid': formSubmitted && publisherForm.get('companyName')?.errors}"
+            >
+            <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('companyName')?.errors?.['required']">
+              Company name is required
+            </div>
+          </div>
+          
+          <!-- Email and Registration in one row -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="officialEmail" class="form-label">Official Email <span class="text-danger">*</span></label>
+              <input 
+                type="email" 
+                class="form-control" 
+                id="officialEmail" 
+                formControlName="officialEmail"
+                [ngClass]="{'is-invalid': formSubmitted && publisherForm.get('officialEmail')?.errors}"
+              >
+              <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('officialEmail')?.errors?.['required']">
+                Official email is required
+              </div>
+              <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('officialEmail')?.errors?.['email']">
+                Please enter a valid email
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label for="companyRegistrationNo" class="form-label">Registration No <span class="text-danger">*</span></label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="companyRegistrationNo" 
+                formControlName="companyRegistrationNo"
+                [ngClass]="{'is-invalid': formSubmitted && publisherForm.get('companyRegistrationNo')?.errors}"
+              >
+              <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('companyRegistrationNo')?.errors?.['required']">
+                Registration number is required
+              </div>
+            </div>
+          </div>
+          
+          <!-- TIN Number -->
+          <div class="mb-3">
+            <label for="tinNumber" class="form-label">TIN Number <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="tinNumber" 
+              formControlName="tinNumber"
+              [ngClass]="{'is-invalid': formSubmitted && publisherForm.get('tinNumber')?.errors}"
+            >
+            <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('tinNumber')?.errors?.['required']">
+              TIN Number is required
+            </div>
+          </div>
+
+          <!-- Address -->
+          <div class="mb-3">
+            <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
+            <textarea 
+              class="form-control" 
+              id="address" 
+              formControlName="address"
+              rows="2"
+              [ngClass]="{'is-invalid': formSubmitted && publisherForm.get('address')?.errors}"
+            ></textarea>
+            <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('address')?.errors?.['required']">
+              Address is required
+            </div>
+          </div>
+          
+          <!-- Deal Information -->
+          <div class="mb-3">
+            <label for="deal" class="form-label">Deal Information (Optional)</label>
+            <textarea 
+              class="form-control" 
+              id="deal" 
+              formControlName="deal"
+              rows="2"
+              placeholder="Enter any deal-specific information here"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+      
+      <!-- PIC Information Card -->
+      <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">Person In Charge (PIC) Information</h5>
+        </div>
+        <div class="card-body">
+          <!-- PIC Name -->
+          <div class="mb-3">
+            <label for="picName" class="form-label">PIC Name <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="picName" 
+              formControlName="picName"
+              [ngClass]="{'is-invalid': formSubmitted && publisherForm.get('picName')?.errors}"
+            >
+            <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('picName')?.errors?.['required']">
+              PIC name is required
+            </div>
+          </div>
+          
+          <!-- PIC Email and Telephone in one row -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="picEmail" class="form-label">PIC Email <span class="text-danger">*</span></label>
+              <input 
+                type="email" 
+                class="form-control" 
+                id="picEmail" 
+                formControlName="picEmail"
+                [ngClass]="{'is-invalid': formSubmitted && publisherForm.get('picEmail')?.errors}"
+              >
+              <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('picEmail')?.errors?.['required']">
+                PIC email is required
+              </div>
+              <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('picEmail')?.errors?.['email']">
+                Please enter a valid email
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label for="picTelNo" class="form-label">PIC Telephone <span class="text-danger">*</span></label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="picTelNo" 
+                formControlName="picTelNo"
+                [ngClass]="{'is-invalid': formSubmitted && publisherForm.get('picTelNo')?.errors}"
+              >
+              <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('picTelNo')?.errors?.['required']">
+                PIC telephone number is required
+              </div>
+            </div>
+          </div>
+          
+          <!-- PIC Position -->
+          <div class="mb-3">
+            <label for="picPosition" class="form-label">PIC Position <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="picPosition" 
+              formControlName="picPosition"
+              placeholder="e.g., Publishing Manager, Director"
+              [ngClass]="{'is-invalid': formSubmitted && publisherForm.get('picPosition')?.errors}"
+            >
+            <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('picPosition')?.errors?.['required']">
+              PIC position is required
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Contract Information Card -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Contract Information</h5>
+          <button type="button" class="btn btn-sm btn-outline-primary" (click)="toggleContractForm()">
+            {{ showContractForm ? 'Hide Details' : 'Add Contract' }}
+          </button>
+        </div>
+        
+        <div class="card-body" *ngIf="showContractForm" formGroupName="contract">
+          <!-- Contract Type and Status -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="contractType" class="form-label">Contract Type <span class="text-danger">*</span></label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="contractType" 
+                formControlName="type"
+                placeholder="e.g., Publishing, Distribution"
+                [ngClass]="{'is-invalid': formSubmitted && publisherForm.get('contract.type')?.errors}"
+              >
+              <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('contract.type')?.errors?.['required']">
+                Contract type is required
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label for="contractStatus" class="form-label">Status</label>
+              <div class="form-check form-switch mt-2">
+                <input 
+                  class="form-check-input" 
+                  type="checkbox" 
+                  id="contractStatus" 
+                  formControlName="isActive"
+                >
+                <label class="form-check-label" for="contractStatus">
+                  {{ publisherForm.get('contract.isActive')?.value ? 'Active' : 'Inactive' }}
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Contract Dates -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="startDate" class="form-label">Start Date <span class="text-danger">*</span></label>
+              <input 
+                type="date" 
+                class="form-control" 
+                id="startDate" 
+                formControlName="startDate"
+                [ngClass]="{'is-invalid': formSubmitted && publisherForm.get('contract.startDate')?.errors}"
+              >
+              <div class="invalid-feedback" *ngIf="formSubmitted && publisherForm.get('contract.startDate')?.errors?.['required']">
+                Start date is required
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label for="endDate" class="form-label">End Date (Optional)</label>
+              <input 
+                type="date" 
+                class="form-control" 
+                id="endDate" 
+                formControlName="endDate"
+              >
+            </div>
+          </div>
+          
+          <!-- Contract Terms -->
+          <div class="mb-3">
+            <label for="terms" class="form-label">Contract Terms (Optional)</label>
+            <textarea 
+              class="form-control" 
+              id="terms" 
+              formControlName="terms"
+              rows="3"
+              placeholder="Enter any contract terms or conditions here"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  
+  <!-- Modal Footer -->
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">Cancel</button>
+    <button type="button" class="btn btn-primary px-4" (click)="onSubmit()" [disabled]="loading">
+      <span class="spinner-border spinner-border-sm me-1" *ngIf="loading"></span>
+      Save Publisher
+    </button>
+  </div>
+</ng-template>

@@ -1,0 +1,45 @@
+/* src/app/add-distribution-modal/add-distribution-modal.component.scss */
+
+.modal-header {
+    background-color: #1a2c56;
+    color: white;
+    border-bottom: 0;
+    
+    .modal-title {
+      font-weight: 600;
+    }
+    
+    .btn-close {
+      filter: invert(1) brightness(200%);
+    }
+  }
+  
+  .modal-footer {
+    border-top: 1px solid #e9ecef;
+    
+    .btn-primary {
+      background-color: #1a2c56;
+      border-color: #1a2c56;
+      
+      &:hover {
+        background-color: darken(#1a2c56, 10%);
+      }
+      
+      &:disabled {
+        background-color: #1a2c56;
+        border-color: #1a2c56;
+        opacity: 0.65;
+      }
+    }
+  }
+  
+  .form-label {
+    font-weight: 500;
+    color: #495057;
+  }
+  
+  .alert-info {
+    background-color: #e3f2fd;
+    border-color: #b6dfff;
+    color: #084298;
+  }

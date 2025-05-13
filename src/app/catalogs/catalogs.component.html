@@ -1,0 +1,703 @@
+<!-- src/app/catalogs/catalogs.component.html -->
+<div class="content-wrapper">
+  <div class="catalog-header">
+    <h5>Music Catalogs</h5>
+    <button class="btn btn-primary" (click)="openAddCatalogModal()">
+      <span class="add-icon">+</span> Add New Catalog
+    </button>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="Search by title or TAP number..."
+            [(ngModel)]="searchTerm" (keyup.enter)="onSearch()">
+          <button class="btn btn-outline-secondary" type="button" (click)="onSearch()">
+            🔍
+          </button>
+        </div>
+      </div>
+      <div class="col-md-2">
+        <select class="form-select" [(ngModel)]="selectedType" (change)="onTypeChange()">
+          <option value="">All Types</option>
+          <option *ngFor="let type of catalogTypes" [value]="type">
+            {{ type | titlecase }}
+          </option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select class="form-select" [(ngModel)]="selectedStatus" (change)="onStatusChange()">
+          <option value="">All Statuses</option>
+          <option [value]="CatalogStatus.PENDING">Pending</option>
+          <option [value]="CatalogStatus.ACTIVE">Active</option>
+          <option [value]="CatalogStatus.INACTIVE">Inactive</option>
+          <option [value]="CatalogStatus.CONFLICT">Conflict</option>
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <select class="form-select" [(ngModel)]="selectedTagging" (change)="onTaggingChange()">
+          <option value="">All Taggings</option>
+          <option *ngFor="let tagging of allTaggings" [value]="tagging">
+            {{ tagging }}
+          </option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button class="btn w-100 btn-outline-secondary" (click)="clearFilters()">
+          Clear Filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Catalogs Table with Expandable Rows -->
+  <div class="table-responsive mt-3">
+    <table class="table table-hover">
+      <thead class="table-light">
+        <tr>
+          <th>IPI CODE</th>
+          <th>Title</th>
+          <th>Performer</th>
+          <!-- <th>Type</th> -->
+    
+          <th>Status</th>
+          <th>TAJA Royalty %</th>
+          <th>Authors / Royalty</th>
+          <th>Publishers / Royalty</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="loading">
+          <td colspan="8" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="catalogs.length === 0 && !loading">
+          <td colspan="8" class="text-center py-4">
+            No catalogs found. Try adjusting your filters or create a new catalog.
+          </td>
+        </tr>
+
+        <!-- Main catalog rows with expand/collapse functionality on entire row -->
+        <ng-container *ngFor="let catalog of catalogs">
+          <tr class="clickable-row" [ngClass]="{
+            'expanded': expandedCatalogId === catalog._id,
+            'conflict-row': catalog.status === CatalogStatus.CONFLICT
+          }"
+            (click)="toggleDetails(catalog._id, catalog.tapNumber)">
+            <td>{{getMainIpiCode(catalog.ipiCode)}}</td>
+            <td>
+              {{ catalog.title }}
+              <span class="expand-indicator" *ngIf="expandedCatalogId !== catalog._id">▼</span>
+              <span class="expand-indicator" *ngIf="expandedCatalogId === catalog._id">▲</span>
+              <!-- Dynamic cover indicator with hover tooltip -->
+              <span *ngIf="catalog.versionType !== 'cover' && getCoverCount(catalog.tapNumber) > 0" 
+                    class="badge bg-info ms-1" 
+                    style="font-size: 0.7rem;"
+                    [title]="'This song has ' + getCoverCount(catalog.tapNumber) + ' cover versions. Click to expand and see them.'">
+                {{ getCoverCount(catalog.tapNumber) }} covers
+              </span>
+            </td>
+            <td>{{ catalog.performer || '-' }}</td>
+   
+            <td>
+              <span class="status-badge" [ngClass]="{
+                  'active': catalog.status === CatalogStatus.ACTIVE,
+                  'pending': catalog.status === CatalogStatus.PENDING,
+                  'inactive': catalog.status === CatalogStatus.INACTIVE,
+                  'conflict': catalog.status === CatalogStatus.CONFLICT
+                }">
+                {{ catalog.status | titlecase }}
+              </span>
+            </td>
+            <td>
+              <span class="total-royalty">
+                {{ getTajaArchiveTotal(catalog._id) }}
+              </span>
+            </td>
+            <td>
+              <div *ngIf="catalogContributors[catalog._id]?.authors">
+                <div *ngFor="let author of catalogContributors[catalog._id].authors | slice:0:2"
+                  class="contributor-item">
+                  <span class="role-badge" [ngClass]="getContributorRoleClasses(author.role)">
+                    {{ author.role }}
+                  </span>
+                  {{ author.name }} / {{ author.royaltyPercentage }}%
+                </div>
+                <div *ngIf="(catalogContributors[catalog._id].authors.length > 2)" class="more-indicator">
+                  +{{ catalogContributors[catalog._id].authors.length - 2 }} more
+                </div>
+              </div>
+              <div *ngIf="!catalogContributors[catalog._id]?.authors" class="text-muted">-</div>
+            </td>
+            <td>
+              <div *ngIf="catalogContributors[catalog._id]?.publishers">
+                <div *ngFor="let publisher of catalogContributors[catalog._id].publishers | slice:0:2"
+                  class="contributor-item">
+                  {{ publisher.name }} / {{ publisher.percentage }}%
+                </div>
+                <div *ngIf="(catalogContributors[catalog._id].publishers.length > 2)" class="more-indicator">
+                  +{{ catalogContributors[catalog._id].publishers.length - 2 }} more
+                </div>
+              </div>
+              <div *ngIf="!catalogContributors[catalog._id]?.publishers" class="text-muted">-</div>
+            </td>
+          </tr>
+
+          <!-- Expanded details row -->
+          <tr *ngIf="expandedCatalogId === catalog._id" class="details-row">
+            <td colspan="8" class="p-0">
+              <div class="catalog-details-container p-3 border-top">
+                <!-- Loading spinner for details -->
+                <div *ngIf="loadingDetails" class="text-center py-4">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading details...</span>
+                  </div>
+                </div>
+
+                <!-- Catalog Details Content -->
+                <div *ngIf="!loadingDetails && catalogDetails">
+                  <!-- Catalog Header -->
+                  <div class="catalog-detail-header d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                      <h3>{{ catalogDetails.catalog.title }}</h3>
+                      <h6 *ngIf="catalogDetails.catalog.alternateTitle">AT:{{ catalogDetails.catalog.alternateTitle }}</h6>
+                      <div class="tap-number">
+                        TAP Number: <span class="badge bg-primary">{{ catalogDetails.catalog.tapNumber }}</span>
+                      </div>
+                    </div>
+                    <div class="header-actions">
+                      <button class="btn btn-outline-primary" (click)="editCatalog()">Edit</button>
+                      <div class="btn-group ms-2">
+                        <button class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown"
+                          aria-expanded="false">
+                          Status
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                          <li><a class="dropdown-item" href="javascript:void(0)"
+                              (click)="updateStatus(CatalogStatus.PENDING)"
+                              *ngIf="catalogDetails.catalog.status !== CatalogStatus.PENDING">
+                              Set to Pending
+                            </a></li>
+                          <li><a class="dropdown-item" href="javascript:void(0)"
+                              (click)="updateStatus(CatalogStatus.ACTIVE)"
+                              *ngIf="catalogDetails.catalog.status !== CatalogStatus.ACTIVE">
+                              Activate
+                            </a></li>
+                          <li><a class="dropdown-item" href="javascript:void(0)"
+                              (click)="updateStatus(CatalogStatus.INACTIVE)"
+                              *ngIf="catalogDetails.catalog.status !== CatalogStatus.INACTIVE">
+                              Deactivate
+                            </a></li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Cover Versions Section - Prominently displayed before tabs -->
+                  <div class="covers-section mb-4" *ngIf="catalogDetails && catalogDetails.covers && catalogDetails.covers.length > 0">
+                    <div class="content-card">
+                      <div class="card-header d-flex justify-content-between align-items-center bg-light-blue">
+                        <h4 class="mb-0 text-primary">
+                          <i class="bi bi-music-note-beamed me-2"></i>Cover Versions
+                        </h4>
+                        <span class="badge bg-primary">{{ catalogDetails.covers.length }}</span>
+                      </div>
+                      <div class="card-body">
+                        <div class="alert alert-info alert-dismissible mb-3" role="alert" style="font-size: 0.9rem;">
+                          <i class="bi bi-info-circle me-2"></i>
+                          These are cover versions of the parent song "{{ catalogDetails.catalog.title }}". Each cover inherits the same contributor information.
+                        </div>
+                        <div class="table-responsive">
+                          <table class="table table-hover">
+                            <thead>
+                              <tr>
+                                <th>Title</th>
+                                <th>Performer</th>
+                                <th>TAP Number</th>
+                                <th>Status</th>
+                                <th>Date Added</th>
+                                <th>ISRC Code</th>
+                                <!-- <th>Authors / Royalty</th> -->
+                                <!-- <th>Publishers / Royalty</th> -->
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr *ngFor="let cover of catalogDetails.covers">
+                                <td>
+                                  <div class="d-flex align-items-center">
+                                    {{ cover.title }}
+                                    <span class="badge bg-info ms-2">Cover</span>
+                                  </div>
+                                </td>
+                                <td>{{ cover.performer || '-' }}</td>
+                                <td>
+                                  <span class="badge bg-primary">{{ cover.tapNumber }}</span>
+                                </td>
+                                <td>
+                                  <span class="status-badge" [ngClass]="{
+                                    'active': cover.status === CatalogStatus.ACTIVE,
+                                    'pending': cover.status === CatalogStatus.PENDING,
+                                    'inactive': cover.status === CatalogStatus.INACTIVE,
+                                    'conflict': cover.status === CatalogStatus.CONFLICT
+                                  }">
+                                    {{ cover.status | titlecase }}
+                                  </span>
+                                </td>
+                                <td>{{ formatDate(cover.dateIn) }}</td>
+                                <td>{{cover.isrcCode || '-'}}</td>
+                              
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Info message when no covers exist -->
+                  <div class="no-covers-message mb-4" *ngIf="catalogDetails && (!catalogDetails.covers || catalogDetails.covers.length === 0)">
+                    <div class="alert alert-light border-info" role="alert">
+                      <i class="bi bi-info-circle me-2"></i>
+                      No cover versions found for this song.
+                    </div>
+                  </div>
+
+                  <!-- Tabs Navigation -->
+                  <ul class="nav nav-tabs mb-3">
+                    <li class="nav-item">
+                      <a class="nav-link" [ngClass]="{'active': activeTab === 'info'}" (click)="setActiveTab('info')"
+                        href="javascript:void(0)">Information</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" [ngClass]="{'active': activeTab === 'contributors'}"
+                        (click)="setActiveTab('contributors')" href="javascript:void(0)">Contributors</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" [ngClass]="{'active': activeTab === 'distribution'}"
+                        (click)="setActiveTab('distribution')" href="javascript:void(0)">Distribution</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" [ngClass]="{'active': activeTab === 'income'}"
+                        (click)="setActiveTab('income')" href="javascript:void(0)">Income</a>
+                    </li>
+                  </ul>
+
+                  <!-- Information Tab -->
+                  <div *ngIf="activeTab === 'info'" class="tab-content">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="content-card">
+                          <div class="card-header">
+                            <h4>Basic Information</h4>
+                          </div>
+                          <div class="card-body">
+                            <table class="table-info">
+                              <tr>
+                                <td class="fw-bold">Title:</td>
+                                <td>{{ catalogDetails.catalog.title }}</td>
+                              </tr>
+                              <tr *ngIf="catalogDetails.catalog.performer">
+                                <td class="fw-bold">Performer:</td>
+                              <td [innerHTML]="formatPerformers(catalogDetails.catalog.performer)"></td>
+                              </tr>
+                              <tr>
+                                <td class="fw-bold">Type:</td>
+                                <td>{{ catalogDetails.catalog.type | titlecase }}</td>
+                              </tr>
+                              <tr *ngIf="catalogDetails.catalog.songType">
+                                <td class="fw-bold">Song Type:</td>
+                                <td>{{ catalogDetails.catalog.songType | titlecase }}</td>
+                              </tr>
+                              <tr>
+                                <td class="fw-bold">Genre:</td>
+                                <td>{{ catalogDetails.catalog.genre || '-' }}</td>
+                              </tr>
+                              <tr>
+                                <td class="fw-bold">Status:</td>
+                                <td>
+                                  <span class="status-badge" [ngClass]="{
+                                      'active': catalogDetails.catalog.status === CatalogStatus.ACTIVE,
+                                      'pending': catalogDetails.catalog.status === CatalogStatus.PENDING,
+                                      'inactive': catalogDetails.catalog.status === CatalogStatus.INACTIVE
+                                    }">
+                                    {{ catalogDetails.catalog.status | titlecase }}
+                                  </span>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td class="fw-bold">Date Added:</td>
+                                <td>{{ formatDate(catalogDetails.catalog.dateIn) }}</td>
+                              </tr>
+                              <tr *ngIf="catalogDetails.catalog.dateOut">
+                                <td class="fw-bold">Date Removed:</td>
+                                <td>{{ formatDate(catalogDetails.catalog.dateOut) }}</td>
+                              </tr>
+                              <tr *ngIf="catalogDetails.catalog.youtubeLink">
+                                <td class="fw-bold">Youtube / Spotify Link:</td>
+                                <td>{{ catalogDetails.catalog.youtubeLink }}</td>
+                              </tr>
+                              <tr>
+                                <td class="fw-bold">Remarks:</td>
+                                <td>{{ catalogDetails.catalog.remarks || '-' }}</td>
+                              </tr>
+                              <tr>
+                                <td class="fw-bold">Total Revenue:</td>
+                                <td class="fw-bold text-success">RM {{ catalogDetails.catalog.totalRevenue |
+                                  number:'1.2-2' }}</td>
+                              </tr>
+                              <tr>
+                                <td class="fw-bold">Country Cover:</td>
+                                <td>
+                                  {{ catalogDetails?.catalog?.countrycover || 0 }}
+                                  <i
+                                  class="fa fa-info-circle text-primary ms-2"
+                                  ngbTooltip="{{ catalogDetails?.catalog?.selectedCountries?.join(', ') || 'No countries selected' }}"
+                                  tooltipClass="custom-tooltip">
+                                </i>
+                                
+                                </td>
+                                
+                          
+                                
+                              </tr>
+                              
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="content-card">
+                          <div class="card-header">
+                            <h4>Catalog Codes</h4>
+                          </div>
+                          <div class="card-body">
+                            <table class="table-info">
+                              <tr>
+                                <td class="fw-bold">TAP Number:</td>
+                                <td>{{ catalogDetails.catalog.tapNumber }}</td>
+                              </tr>
+                              <tr>
+                                <td class="fw-bold">INV Code:</td>
+                                <td>{{ catalogDetails.catalog.invCode || '-' }}</td>
+                              </tr>
+                              <tr>
+                                <td class="fw-bold">IPI Code:</td>
+                                <td>
+                                  <ng-container
+                                    *ngIf="catalogDetails.catalog.ipiCode && catalogDetails.catalog.ipiCode.length > 0; else noIpiCode">
+                                    <div *ngFor="let code of sortedIpiCodes()">
+                                      <span [ngClass]="{'fw-bold': code.startsWith('100')}">{{ code }}</span>
+                                    </div>
+                                  </ng-container>
+                                  <ng-template #noIpiCode>-</ng-template>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td class="fw-bold">ISWC Code:</td>
+                                <td>{{ catalogDetails.catalog.iswcCode || '-' }}</td>
+                              </tr>
+                              <tr *ngIf="catalogDetails.catalog.isrcCode">
+                                <td class="fw-bold">ISRC Code:</td>
+                                <td>{{ catalogDetails.catalog.isrcCode }}</td>
+                              </tr>
+                              <tr *ngIf="catalogDetails.catalog.tagging">
+                                <td class="fw-bold">Tagging:</td>
+                                <td>{{ catalogDetails.catalog.tagging }}</td>
+                              </tr>
+                              <tr *ngIf="catalogDetails.catalog.parentTapNumber">
+                                <td class="fw-bold">Parent TAP:</td>
+                                <td>{{ catalogDetails.catalog.parentTapNumber }}</td>
+                              </tr>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Contributors Tab -->
+                  <div *ngIf="activeTab === 'contributors'" class="tab-content">
+                  
+                    <!-- Check if there are any contributors at all -->
+                    <ng-container *ngIf="hasAnyContributors(); else noContributorsTemplate">
+                      <!-- Contributors by Role -->
+                      <ng-container *ngFor="let role of ['C', 'A', 'CA', 'AR']">
+                        <div class="content-card mb-3" *ngIf="getContributorsForRole(role).length > 0">
+                          <div class="card-header d-flex justify-content-between align-items-center">
+                            <h4>{{ getRoleName(role) }}s</h4>
+                            <!-- Updated role-total div with the combined total -->
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                              <div class="role-total">
+                                {{ getRoleName(role) }}: <span class="fw-bold">{{
+                                  formatPercentage(getRolePercentageTotal(role)) }}</span>
+                                | Publishers: <span class="fw-bold">{{ formatPercentage(getTotalPublisherPercentage(role))
+                                  }}</span>
+                                <ng-container *ngIf="getTotalSubPublisherPercentage(role) > 0">
+                                  | Sub-Publishers: <span class="fw-bold">{{
+                                    formatPercentage(getTotalSubPublisherPercentage(role)) }}</span>
+                                </ng-container>
+                                | Total: <span class="fw-bold text-primary">{{
+                                  formatPercentage(getTotalAllPercentages(role)) }}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="card-body">
+                            <div class="table-responsive">
+                              <table class="table table-hover">
+                                <thead>
+                                  <tr>
+                                    <th>Name</th>
+                                    <th>Royalty %</th>
+                                    <th>Manager</th>
+                                    <th>Publisher (OP)</th>
+                                    <th>Publisher %</th>
+                                    <th>Sub-Publisher (SP)</th>
+                                    <th>SP %</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr *ngFor="let contributor of getContributorsForRole(role)">
+                                    <td>
+                                      <span class="role-badge" [ngClass]="getContributorRoleClasses(role)">
+                                        {{ role }}
+                                      </span>
+                                      {{ contributor.name }}
+                                    </td>
+                                    <td>{{ formatPercentage(contributor.royaltyPercentage) }}</td>
+                                    <td>{{ contributor.manager || '-' }}</td>
+                                    <td>{{ contributor.publisherName || '-' }}</td>
+                                    <td>{{ contributor.publisherPercentage ?
+                                      formatPercentage(contributor.publisherPercentage) : '-' }}</td>
+                                    <td>{{ contributor.subPublisherName || '-' }}</td>
+                                    <td>{{ contributor.subPublisherPercentage ?
+                                      formatPercentage(contributor.subPublisherPercentage) : '-' }}</td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </ng-container>
+                    </ng-container>
+                  
+                    <!-- No Contributors Message -->
+                    <ng-template #noContributorsTemplate>
+                      <div class="content-card mb-3">
+                        <div class="card-body text-center py-5">
+                          <div class="empty-state">
+                            <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+                            <h4 class="mt-3">Don't have contributor</h4>
+                            <p class="text-muted">No contributors have been added to this catalog yet.</p>
+                            <button class="btn btn-primary mt-2" (click)="openAddContributorModal()">
+                              <span class="add-icon">+</span> Add Contributors
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </ng-template>
+                  </div>
+
+                  <!-- Distribution Tab -->
+                  <div *ngIf="activeTab === 'distribution'" class="tab-content">
+                    <div class="content-card">
+                      <div class="card-header">
+                        <h4>Current Distributor</h4>
+                      </div>
+                      <div class="card-body">
+                        <div *ngIf="catalogDetails.activeDistribution" class="current-distributor">
+                          <div class="distributor-info">
+                            <span class="distributor-name">{{ catalogDetails.activeDistribution.distributor }}</span>
+                            <span class="distributor-badge active">Active</span>
+                          </div>
+                          <div class="distributor-dates">
+                            Start Date: {{ formatDate(catalogDetails.activeDistribution.startDate) }}
+                          </div>
+                        </div>
+                        <div *ngIf="!catalogDetails.activeDistribution" class="text-center py-3">
+                          <div class="alert alert-warning">No active distributor assigned</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="content-card mt-3">
+                      <div class="card-header">
+                        <h4>Distribution History</h4>
+                      </div>
+                      <div class="card-body">
+                        <div class="table-responsive">
+                          <table class="table table-hover">
+                            <thead>
+                              <tr>
+                                <th>Distributor</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr *ngIf="catalogDetails.distributions.length === 0">
+                                <td colspan="4" class="text-center">No distribution history available</td>
+                              </tr>
+                              <tr *ngFor="let distribution of catalogDetails.distributions">
+                                <td>{{ distribution.distributor }}</td>
+                                <td>{{ formatDate(distribution.startDate) }}</td>
+                                <td>{{ distribution.endDate ? formatDate(distribution.endDate) : 'Current' }}</td>
+                                <td>
+                                  <span class="status-badge" [ngClass]="distribution.isActive ? 'active' : 'inactive'">
+                                    {{ distribution.isActive ? 'Active' : 'Inactive' }}
+                                  </span>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Income Tab -->
+                  <div *ngIf="activeTab === 'income'" class="tab-content">
+                    <div class="row mb-3">
+                      <div class="col-12">
+                        <button class="btn btn-primary" (click)="openAddIncomeModal()">
+                          <span class="add-icon">+</span> Record Income
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="content-card mb-3">
+                      <div class="card-header">
+                        <h4>Income Summary</h4>
+                      </div>
+                      <div class="card-body">
+                        <div class="row">
+                          <div class="col-md-4">
+                            <div class="summary-card">
+                              <div class="summary-title">Total Revenue</div>
+                              <div class="summary-value">RM {{ catalogDetails.totalRevenue | number:'1.2-2' }}</div>
+                            </div>
+                          </div>
+                          <div class="col-md-4">
+                            <div class="summary-card">
+                              <div class="summary-title">Pending Payments</div>
+                              <div class="summary-value">
+                                {{ getPendingPaymentsCount() }}
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-md-4">
+                            <div class="summary-card">
+                              <div class="summary-title">Latest Income</div>
+                              <div class="summary-value" *ngIf="catalogDetails.incomes.length > 0">
+                                RM {{ catalogDetails.incomes[0].amount | number:'1.2-2' }}
+                              </div>
+                              <div class="summary-value" *ngIf="catalogDetails.incomes.length === 0">
+                                -
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="content-card">
+                      <div class="card-header">
+                        <h4>Income History</h4>
+                      </div>
+                      <div class="card-body">
+                        <div class="table-responsive">
+                          <table class="table table-hover">
+                            <thead>
+                              <tr>
+                                <th>Date</th>
+                                <th>Amount (RM)</th>
+                                <th>Source</th>
+                                <th>Royalties Calculated</th>
+                                <th>Payment Status</th>
+                                <th>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr *ngIf="catalogDetails.incomes.length === 0">
+                                <td colspan="6" class="text-center">No income records available</td>
+                              </tr>
+                              <tr *ngFor="let income of catalogDetails.incomes">
+                                <td>{{ formatDate(income.date) }}</td>
+                                <td>{{ income.amount | number:'1.2-2' }}</td>
+                                <td>{{ income.source || 'General' }}</td>
+                                <td>
+                                  <span class="status-badge"
+                                    [ngClass]="income.royaltiesCalculated ? 'active' : 'inactive'">
+                                    {{ income.royaltiesCalculated ? 'Yes' : 'No' }}
+                                  </span>
+                                </td>
+                                <td>
+                                  <span class="status-badge"
+                                    [ngClass]="income.paymentProcessed ? 'active' : 'inactive'">
+                                    {{ income.paymentProcessed ? 'Paid' : 'Pending' }}
+                                  </span>
+                                </td>
+                                <td>
+                                  <button class="btn btn-sm btn-outline-primary me-1"
+                                    *ngIf="!income.royaltiesCalculated" (click)="calculateRoyalties(income._id)">
+                                    Calculate
+                                  </button>
+                                  <button class="btn btn-sm btn-outline-success"
+                                    *ngIf="income.royaltiesCalculated && !income.paymentProcessed"
+                                    (click)="processPayment(income._id)">
+                                    Process Payment
+                                  </button>
+                                  <button class="btn btn-sm btn-outline-secondary" *ngIf="income.paymentProcessed">
+                                    View Details
+                                  </button>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="d-flex justify-content-between align-items-center pagination" *ngIf="totalItems > 0">
+    <div>
+      Showing {{ ((currentPage - 1) * itemsPerPage) + 1 }} to
+      {{ currentPage * itemsPerPage > totalItems ? totalItems : currentPage * itemsPerPage }}
+      of {{ totalItems }} entries
+    </div>
+    <nav aria-label="Catalog pagination">
+      <ul class="pagination">
+        <li class="page-item" [ngClass]="{ 'disabled': currentPage === 1 }">
+          <a class="page-link" href="javascript:void(0)" (click)="onPageChange(currentPage - 1)">Previous</a>
+        </li>
+        <li class="page-item" *ngFor="let page of [].constructor(Math.ceil(totalItems / itemsPerPage)); let i = index"
+          [ngClass]="{ 'active': currentPage === i + 1 }">
+          <a class="page-link number_page" href="javascript:void(0)" (click)="onPageChange(i + 1)">{{ i + 1 }}</a>
+        </li>
+        <li class="page-item" [ngClass]="{ 'disabled': currentPage === Math.ceil(totalItems / itemsPerPage) }">
+          <a class="page-link" href="javascript:void(0)" (click)="onPageChange(currentPage + 1)">Next</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<!-- Modal Components -->
+<app-add-catalog-modal (catalogAdded)="onCatalogAdded($event)"></app-add-catalog-modal>
+<app-add-contributor-modal (contributorAdded)="onContributorAdded()"></app-add-contributor-modal>
+<app-add-distribution-modal (distributionAdded)="onDistributionAdded()"></app-add-distribution-modal>

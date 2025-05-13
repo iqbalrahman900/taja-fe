@@ -1,0 +1,310 @@
+<!-- src/app/add-catalog-modal/add-catalog-modal.component.html -->
+<ng-template #content let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">Add New Catalog</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="catalogForm">
+      <!-- Basic Information Section -->
+      <h6 class="section-title">Basic Information</h6>
+      
+      <!-- Performer - Full Width -->
+      <div class="row mb-3">
+        <div class="col-12">
+          <label for="performer" class="form-label">Performer</label>
+          <input 
+            type="text" 
+            class="form-control form-control-sm" 
+            id="performer" 
+            formControlName="performer"
+            placeholder="Artist or band name">
+        </div>
+      </div>
+      
+      <!-- Title and Song Type Row -->
+      <div class="row mb-3">
+        <div class="col-md-8">
+          <!-- Title with Toggle -->
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <label for="title" class="form-label mb-0">Title <span class="text-danger">*</span></label>
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="alternateToggle" 
+                     [(ngModel)]="hasAlternateTitle" [ngModelOptions]="{standalone: true}">
+              <label class="form-check-label text-muted" for="alternateToggle">
+                Add alternate title
+              </label>
+            </div>
+          </div>
+          
+          <div [ngClass]="{'dual-title-container': hasAlternateTitle}">
+            <div [ngClass]="{'mb-2': hasAlternateTitle}">
+              <input 
+                type="text" 
+                class="form-control form-control-sm" 
+                id="title" 
+                formControlName="title"
+                [placeholder]="hasAlternateTitle ? 'Primary title' : 'Song title'"
+                [ngClass]="{'is-invalid': catalogForm.get('title')?.invalid && catalogForm.get('title')?.touched}">
+              <div class="invalid-feedback small" *ngIf="catalogForm.get('title')?.errors?.['required']">
+                Title is required
+              </div>
+            </div>
+            
+            <div *ngIf="hasAlternateTitle" [@fadeIn]>
+              <input 
+                type="text" 
+                class="form-control form-control-sm" 
+                id="alternateTitle" 
+                formControlName="alternateTitle"
+                placeholder="Alternate or secondary title">
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label for="songType" class="form-label">Song Type <span class="text-danger">*</span></label>
+          <select 
+            class="form-select form-select-sm" 
+            id="songType" 
+            formControlName="songType"
+            (change)="onSongTypeChange()">
+            <option *ngFor="let type of songTypes" [value]="type">
+              {{ type | titlecase }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Type and Version Type Row -->
+      <div class="row mb-3" *ngIf="showCatalogType() || showVersionType()">
+        <div class="col-md-6" *ngIf="showCatalogType()">
+          <label for="type" class="form-label">Type <span class="text-danger">*</span></label>
+          <select 
+            class="form-select form-select-sm" 
+            id="type" 
+            formControlName="type">
+            <option *ngFor="let type of catalogTypes" [value]="type">
+              {{ type | titlecase }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label for="versionType" class="form-label">Version Type</label>
+          <select 
+            class="form-select form-select-sm" 
+            id="versionType" 
+            formControlName="versionType"
+            (change)="onVersionTypeChange()">
+            <option value="" selected>None</option>
+            <option *ngFor="let vType of versionTypes" [value]="vType">
+              {{ vType | titlecase }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Genre, Tagging, and Date In Row -->
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <label for="genre" class="form-label">Genre</label>
+          <select 
+            class="form-select form-select-sm" 
+            id="genre" 
+            formControlName="genre">
+            <option value="">Select a genre</option>
+            <option value="pop">Pop</option>
+            <option value="rock">Rock</option>
+            <option value="traditional">Traditional</option>
+            <option value="hiphop">Hip Hop</option>
+            <option value="rap">Rap</option>
+            <option value="jazz">Jazz</option>
+            <option value="balada">Balada</option>
+            <option value="dangdut">Dangdut</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label for="tagging" class="form-label">Tagging</label>
+          <select 
+            class="form-select form-select-sm" 
+            id="tagging" 
+            formControlName="tagging">
+            <option value="">Select a tagging</option>
+            <option *ngFor="let tag of availableTags" [value]="tag.categoryName">
+              {{ tag.categoryName }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label for="dateIn" class="form-label">Date In <span class="text-danger">*</span></label>
+          <input 
+            type="date" 
+            class="form-control form-control-sm" 
+            id="dateIn" 
+            formControlName="dateIn">
+        </div>
+      </div>
+
+      <!-- Country Cover and YouTube Link Row -->
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <label for="countrycover" class="form-label">Country Cover</label>
+          <div class="d-flex gap-2">
+            <input 
+              type="number" 
+              class="form-control form-control-sm flex-grow-1" 
+              id="countrycover" 
+              formControlName="countrycover"
+              readonly
+              placeholder="Select countries">
+            <button 
+              type="button" 
+              class="btn btn-outline-primary btn-sm" 
+              (click)="openCountrySelector()">
+              Select
+            </button>
+          </div>
+          <div class="form-text small">{{ selectedCountryNames.length }} countries selected</div>
+        </div>
+        <div class="col-md-8">
+          <label for="youtubeLink" class="form-label">YouTube Link</label>
+          <input 
+            type="url" 
+            class="form-control form-control-sm" 
+            id="youtubeLink" 
+            formControlName="youtubeLink"
+            placeholder="https://www.youtube.com/watch?v=..."
+            [ngClass]="{'is-invalid': catalogForm.get('youtubeLink')?.invalid && catalogForm.get('youtubeLink')?.touched}">
+          <div class="invalid-feedback small" *ngIf="catalogForm.get('youtubeLink')?.errors?.['pattern']">
+            Please enter a valid YouTube URL
+          </div>
+        </div>
+      </div>
+
+      <!-- Date Out Row -->
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <label for="dateOut" class="form-label">Date Out</label>
+          <input 
+            type="date" 
+            class="form-control form-control-sm" 
+            id="dateOut" 
+            formControlName="dateOut">
+        </div>
+      </div>
+
+      <!-- Remarks - Full Width -->
+      <div class="row mb-3">
+        <div class="col-12">
+          <label for="remarks" class="form-label">Remarks / Description</label>
+          <textarea 
+            class="form-control form-control-sm" 
+            id="remarks" 
+            rows="3" 
+            formControlName="remarks"
+            placeholder="Add any additional notes or description..."></textarea>
+        </div>
+      </div>
+
+      <!-- Catalog Codes Section -->
+      <h6 class="section-title mt-4">Catalog Codes</h6>
+      
+      <!-- INV Code - Full Width -->
+      <div class="row mb-3">
+        <div class="col-12">
+          <label for="invCode" class="form-label">INV Code</label>
+          <input 
+            type="text" 
+            class="form-control form-control-sm" 
+            id="invCode" 
+            formControlName="invCode"
+            placeholder="e.g., INV-2024-0001">
+        </div>
+      </div>
+      
+      <!-- IPI Codes - Full Width -->
+      <div class="row mb-3">
+        <div class="col-12">
+          <label for="ipiCodes" class="form-label">IPI Codes</label>
+          <div class="ipi-codes-wrapper">
+            <div formArrayName="ipiCodes">
+              <div class="input-group input-group-sm mb-2" *ngFor="let control of ipiCodesArray.controls; let i = index">
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  [formControlName]="i"
+                  placeholder="e.g., ABC123">
+                <button 
+                  type="button" 
+                  class="btn btn-outline-danger btn-sm" 
+                  (click)="removeIpiCode(i)"
+                  *ngIf="ipiCodesArray.length > 1">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </div>
+            </div>
+            <button 
+              type="button" 
+              class="btn btn-outline-primary btn-sm" 
+              (click)="addIpiCode()">
+              <i class="fa fa-plus"></i> Add IPI Code
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ISWC and ISRC Codes Row -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="iswcCode" class="form-label">ISWC Code</label>
+          <input 
+            type="text" 
+            class="form-control form-control-sm" 
+            id="iswcCode" 
+            formControlName="iswcCode"
+            placeholder="e.g., T-034.524.680-1">
+        </div>
+        <div class="col-md-6">
+          <label for="isrcCode" class="form-label">ISRC Code</label>
+          <input 
+            type="text" 
+            class="form-control form-control-sm" 
+            id="isrcCode" 
+            formControlName="isrcCode"
+            placeholder="e.g., USRC15076271">
+        </div>
+      </div>
+
+      <!-- Parent TAP Number - Full Width -->
+      <div class="row mb-3" *ngIf="showParentTapNumber()">
+        <div class="col-12">
+          <label for="parentTapNumber" class="form-label">Parent TAP Number</label>
+          <input 
+            type="text" 
+            class="form-control form-control-sm" 
+            id="parentTapNumber" 
+            formControlName="parentTapNumber"
+            placeholder="TAP-YYYY-XXXX-MY">
+          <div class="form-text small">For remix or cover versions, provide the TAP number of the original song</div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary btn-sm" (click)="modal.close()">Cancel</button>
+    <button 
+      type="button" 
+      class="btn btn-primary btn-sm" 
+      [disabled]="catalogForm.invalid || loading"
+      (click)="onSubmit()">
+      <span class="spinner-border spinner-border-sm me-2" *ngIf="loading"></span>
+      Add Catalog
+    </button>
+  </div>
+</ng-template>
+
+<!-- Country Selection Modal -->
+<app-country-selection-modal 
+  #countrySelector
+  [preSelectedCountries]="selectedCountryNames"
+  (countriesSelected)="onCountriesSelected($event)">
+</app-country-selection-modal>

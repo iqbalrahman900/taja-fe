@@ -1,0 +1,494 @@
+/* src/app/catalogs/catalogs.component.scss */
+
+// Main content layout
+.content-wrapper {
+  padding: 20px;
+}
+
+.catalog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 0px 15px;
+
+  h1 {
+    margin: 0;
+    color: #333;
+    font-weight: 600;
+  }
+
+  .add-icon {
+    font-weight: bold;
+    margin-right: 5px;
+  }
+}
+
+.filters-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+// Clickable row styling
+.clickable-row {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  
+  &:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+  }
+  
+  &.expanded {
+    background-color: rgba(0, 123, 255, 0.1);
+    border-bottom: none;
+    font-weight: 500;
+  }
+
+  // Add hover effect to indicate row is clickable
+  &:hover td:first-child::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background-color: rgba(0, 123, 255, 0.5);
+  }
+
+  &.expanded td:first-child::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background-color: #007bff;
+  }
+}
+
+.expand-indicator {
+  font-size: 0.6rem;
+  color: #6c757d;
+  margin-left: 8px;
+  transition: transform 0.3s ease;
+  display: inline-block;
+  opacity: 0.7;
+}
+
+// Details row styling
+.details-row {
+  background-color: #fafafa;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  
+  &.active {
+    background-color: rgba(25, 135, 84, 0.15);
+    color: #198754; // Green
+  }
+  
+  &.inactive {
+    background-color: rgba(108, 117, 125, 0.15);
+    color: #6c757d; // Gray
+  }
+  
+  &.pending {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #ffc107; // Amber/Yellow
+  }
+  
+  &.conflict {
+    background-color: rgba(220, 53, 69, 0.15);
+    color: #dc3545; // Red
+  }
+}
+
+// Expanded details container
+.catalog-details-container {
+  background-color: #f9f9f9;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid #dee2e6;
+  border-radius: 0 0 8px 8px;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.catalog-detail-header {
+  padding-bottom: 15px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  
+  h3 {
+    margin-bottom: 5px;
+    color: #1a2c56;
+    font-weight: 600;
+  }
+  
+  .tap-number {
+    font-size: 0.9em;
+    color: #666;
+  }
+}
+
+// Content cards in detail section
+.content-card {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  
+  .card-header {
+    background-color: #f5f5f5;
+    padding: 12px 15px;
+    border-bottom: 1px solid #dee2e6;
+    
+    h4 {
+      margin: 0;
+      font-size: 1.1em;
+      color: #333;
+      font-weight: 600;
+    }
+  }
+  
+  .card-body {
+    padding: 15px;
+  }
+}
+
+// Info tables
+.table-info {
+  width: 100%;
+  
+  tr {
+    border-bottom: 1px solid #eee;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+  
+  td {
+    padding: 10px 5px;
+    
+    &:first-child {
+      width: 140px;
+    }
+  }
+}
+
+// Role badges for contributors
+.role-badge {
+  display: inline-block;
+  padding: 0.2em 0.5em;
+  margin-right: 5px;
+  font-size: 0.75em;
+  border-radius: 3px;
+  font-weight: 600;
+  
+  &.composer {
+    background-color: #e3f2fd;
+    color: #0d47a1;
+  }
+  
+  &.author {
+    background-color: #e8f5e9;
+    color: #1b5e20;
+  }
+  
+  &.composer-author {
+    background-color: #f3e5f5;
+    color: #4a148c;
+  }
+  
+  &.arranger {
+    background-color: #fff3e0;
+    color: #e65100;
+  }
+}
+
+// Contributor display styling
+.contributor-item {
+  margin-bottom: 5px;
+  font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.more-indicator {
+  font-size: 0.8em;
+  color: #6c757d;
+  margin-top: 2px;
+  font-style: italic;
+}
+
+// Summary cards for income
+.summary-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  height: 100%;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .summary-title {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 8px;
+  }
+  
+  .summary-value {
+    font-size: 1.5em;
+    font-weight: 600;
+    color: #1a2c56;
+  }
+}
+
+// Dropdown menu positioning
+.dropdown-menu {
+  z-index: 1050;
+}
+
+// Distributor section
+.current-distributor {
+  padding: 15px;
+  background-color: rgba(40, 167, 69, 0.05);
+  border-radius: 6px;
+  
+  .distributor-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    
+    .distributor-name {
+      font-size: 1.1em;
+      font-weight: 600;
+      margin-right: 10px;
+    }
+    
+    .distributor-badge {
+      display: inline-block;
+      font-size: 0.75em;
+      padding: 0.25em 0.6em;
+      border-radius: 30px;
+      
+      &.active {
+        background-color: #28a745;
+        color: white;
+      }
+    }
+  }
+  
+  .distributor-dates {
+    font-size: 0.9em;
+    color: #666;
+  }
+}
+
+// Tab content
+.tab-content {
+  padding: 15px 0;
+}
+
+// Role total display
+.role-total {
+  font-size: 0.9em;
+  color: #666;
+}
+
+// Table styling
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 0;
+
+  th {
+    font-weight: 600;
+    color: #495057;
+    padding: 12px 15px;
+    background-color: #f8f9fa;
+    position: relative;
+    
+    &:after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 2px;
+      background-color: #dee2e6;
+    }
+  }
+
+  td {
+    padding: 12px 15px;
+    vertical-align: middle;
+  }
+}
+
+// Song type badges
+.badge {
+  font-weight: 500;
+  padding: 0.4em 0.7em;
+  
+  &.bg-primary {
+    background-color: #007bff;
+  }
+  
+  &.bg-warning {
+    background-color: #ffc107;
+    color: #212529;
+  }
+  
+  &.bg-success {
+    background-color: #28a745;
+  }
+  
+  &.bg-info {
+    background-color: #17a2b8;
+    color: #fff;
+  }
+}
+
+// Pagination styling
+.pagination {
+  margin-bottom: 0;
+  
+  .page-link {
+    color: #1a2c56;
+    
+    &:focus {
+      box-shadow: 0 0 0 0.25rem rgba(26, 44, 86, 0.25);
+    }
+  }
+  
+  .active > .page-link {
+    background-color: #1a2c56;
+    border-color: #1a2c56;
+  }
+}
+
+// Total royalty styling
+.total-royalty {
+  font-weight: 600;
+  color: #1a2c56;
+}
+
+// Add animation for expanding/collapsing
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.catalog-details-container {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+// Button styling improvements
+.btn-outline-primary {
+  color: #1a2c56;
+  border-color: #1a2c56;
+  
+  &:hover, &:active, &.active {
+    background-color: #1a2c56;
+    border-color: #1a2c56;
+  }
+}
+
+.btn-primary {
+  background-color: #1a2c56;
+  border-color: #1a2c56;
+  
+  &:hover {
+    background-color: darken(#1a2c56, 10%);
+    border-color: darken(#1a2c56, 10%);
+  }
+}
+
+// Navigation tabs styling
+.nav-tabs {
+  border-bottom: 1px solid #dee2e6;
+  
+  .nav-link {
+    color: #495057;
+    border: none;
+    padding: 10px 15px;
+    margin-right: 2px;
+    position: relative;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      color: #1a2c56;
+      background-color: rgba(26, 44, 86, 0.05);
+      border-color: transparent;
+    }
+    
+    &.active {
+      color: #1a2c56;
+      background-color: transparent;
+      font-weight: 500;
+      
+      &:after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        height: 2px;
+        background-color: #1a2c56;
+      }
+    }
+  }
+}
+
+.pagination{
+  font-size: 10px;
+  margin-top: 10px;
+
+  li  .number_page {
+    color: white;
+  }
+}
+
+.table-responsive{
+  font-size: 12px;
+
+  table-light{
+    font-style: bold;
+  }
+}
+
+
+
+thead.table-light th {
+  font-weight: bold;
+}
+
+.custom-tooltip .tooltip-inner {
+  max-width: 300px; /* or whatever width you prefer */
+  white-space: pre-wrap; /* to wrap text */
+  text-align: left;
+}
+
+.tooltip-inner{
+  max-width: 500px !important;
+}
+
+.conflict-row {
+  background-color: rgba(220, 53, 69, 0.1); /* Lighter red background */
+}

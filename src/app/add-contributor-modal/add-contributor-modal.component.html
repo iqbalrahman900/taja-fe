@@ -1,0 +1,237 @@
+<!-- src/app/add-contributor-modal/add-contributor-modal.component.html -->
+<ng-template #content let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">Add Contributor to {{ catalog?.title }}</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="contributorForm">
+      
+      <!-- Contributor Type Toggle -->
+      <div class="row mb-3">
+        <div class="col-12">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="isTajaContributor" 
+                   [(ngModel)]="isTajaContributor" [ngModelOptions]="{standalone: true}"
+                   (change)="onContributorTypeChange()">
+            <label class="form-check-label" for="isTajaContributor">
+              TAJA Contributor
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Basic Information Section -->
+      <h6 class="section-title">Basic Information</h6>
+      
+      <!-- TAJA Songwriter Selection -->
+      <div class="row mb-3" *ngIf="isTajaContributor">
+        <div class="col-md-6">
+          <label for="selectedSongwriter" class="form-label">Select Songwriter</label>
+          <select 
+            class="form-select form-select-sm" 
+            id="selectedSongwriter" 
+            formControlName="selectedSongwriter">
+            <option value="">-- Select Songwriter --</option>
+            <option *ngFor="let songwriter of songwriters" [value]="songwriter._id">
+              {{ songwriter.name }}
+            </option>
+          </select>
+        </div>
+        
+        <div class="col-md-6">
+          <label for="selectedPenName" class="form-label">Select Pseudonym Name</label>
+          <select 
+            class="form-select form-select-sm" 
+            id="selectedPenName" 
+            formControlName="selectedPenName"
+            [disabled]="!availablePenNames.length">
+            <option value="">-- {{ availablePenNames.length ? 'Select Pseudonym Name' : 'No Pseudonym Names Available' }} --</option>
+            <option *ngFor="let penName of availablePenNames" [value]="penName._id">
+              {{ penName.name }}
+            </option>
+          </select>
+          <div class="form-text small" *ngIf="availablePenNames.length">
+            Select a pen name or use the real name above
+          </div>
+          <div class="form-text small" *ngIf="!availablePenNames.length && contributorForm.get('selectedSongwriter')?.value">
+            This songwriter has no pen names
+          </div>
+        </div>
+      </div>
+      
+      <!-- Contributor Details Row -->
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <label for="name" class="form-label">Contributor Name <span class="text-danger">*</span></label>
+          <input 
+            type="text" 
+            class="form-control form-control-sm" 
+            id="name" 
+            formControlName="name"
+            [readonly]="isTajaContributor && contributorForm.get('selectedSongwriter')?.value"
+            [ngClass]="{'is-invalid': contributorForm.get('name')?.invalid && contributorForm.get('name')?.touched}">
+          <div class="invalid-feedback small" *ngIf="contributorForm.get('name')?.errors?.['required']">
+            Name is required
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label for="role" class="form-label">Role <span class="text-danger">*</span></label>
+          <select 
+            class="form-select form-select-sm" 
+            id="role" 
+            formControlName="role"
+            [ngClass]="{'is-invalid': contributorForm.get('role')?.invalid && contributorForm.get('role')?.touched}">
+            <option *ngFor="let type of roleTypes" [value]="type.value">
+              {{ type.label }} ({{ type.value }})
+            </option>
+          </select>
+          <div class="invalid-feedback small" *ngIf="contributorForm.get('role')?.errors?.['required']">
+            Role is required
+          </div>
+        </div>
+        <div class="col-md-4">
+          <label for="royaltyPercentage" class="form-label">Royalty % <span class="text-danger">*</span></label>
+          <input 
+            type="number" 
+            class="form-control form-control-sm" 
+            id="royaltyPercentage" 
+            formControlName="royaltyPercentage"
+            min="0"
+            max="100"
+            step="0.01"
+            [ngClass]="{'is-invalid': contributorForm.get('royaltyPercentage')?.invalid && contributorForm.get('royaltyPercentage')?.touched}">
+          <div class="invalid-feedback small" *ngIf="contributorForm.get('royaltyPercentage')?.errors?.['required']">
+            Percentage is required
+          </div>
+          <div class="invalid-feedback small" *ngIf="contributorForm.get('royaltyPercentage')?.errors?.['min'] || contributorForm.get('royaltyPercentage')?.errors?.['max']">
+            Must be between 0 and 100
+          </div>
+        </div>
+      </div>
+
+      <!-- Manager - Full Width -->
+      <div class="row mb-3">
+        <div class="col-12">
+          <label for="manager" class="form-label">Manager</label>
+          <input 
+            type="text" 
+            class="form-control form-control-sm" 
+            id="manager" 
+            formControlName="manager"
+            placeholder="Enter manager name">
+        </div>
+      </div>
+
+      <!-- Publisher Information Section -->
+      <h6 class="section-title mt-4">Publisher Information</h6>
+      
+      <div class="row mb-3">
+        <div class="col-md-3">
+          <label for="publisherType" class="form-label">Publisher Type</label>
+          <select 
+            class="form-select form-select-sm" 
+            id="publisherType" 
+            formControlName="publisherType">
+            <option *ngFor="let type of publisherTypes" [value]="type.value">
+              {{ type.label }} ({{ type.value }})
+            </option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label for="publisherName" class="form-label">Publisher Name</label>
+          <div class="input-group input-group-sm">
+            <input 
+              type="text" 
+              class="form-control" 
+              id="publisherName" 
+              formControlName="publisherName"
+              placeholder="Enter publisher name">
+            <div class="input-group-text">
+              <div class="form-check">
+                <input 
+                  class="form-check-input" 
+                  type="checkbox" 
+                  id="useTajaArchivePublisher" 
+                  (change)="onPublisherCheckboxChange($event)">
+                <label class="form-check-label" for="useTajaArchivePublisher">
+                  TAJA
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label for="publisherPercentage" class="form-label">Publisher %</label>
+          <input 
+            type="number" 
+            class="form-control form-control-sm" 
+            id="publisherPercentage" 
+            formControlName="publisherPercentage"
+            min="0"
+            max="100"
+            step="0.01"
+            [ngClass]="{'is-invalid': contributorForm.get('publisherPercentage')?.invalid && contributorForm.get('publisherPercentage')?.touched}">
+          <div class="invalid-feedback small" *ngIf="contributorForm.get('publisherPercentage')?.errors?.['min'] || contributorForm.get('publisherPercentage')?.errors?.['max']">
+            Must be between 0 and 100
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-Publisher Information Section -->
+      <h6 class="section-title mt-4">Sub-Publisher Information</h6>
+      
+      <div class="row mb-3">
+        <div class="col-md-9">
+          <label for="subPublisherName" class="form-label">Sub-Publisher Name</label>
+          <div class="input-group input-group-sm">
+            <input 
+              type="text" 
+              class="form-control" 
+              id="subPublisherName" 
+              formControlName="subPublisherName"
+              placeholder="Enter sub-publisher name">
+            <div class="input-group-text">
+              <div class="form-check">
+                <input 
+                  class="form-check-input" 
+                  type="checkbox" 
+                  id="useTajaArchiveSubPublisher" 
+                  (change)="onSubPublisherCheckboxChange($event)">
+                <label class="form-check-label" for="useTajaArchiveSubPublisher">
+                  TAJA
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label for="subPublisherPercentage" class="form-label">Sub-Publisher %</label>
+          <input 
+            type="number" 
+            class="form-control form-control-sm" 
+            id="subPublisherPercentage" 
+            formControlName="subPublisherPercentage"
+            min="0"
+            max="100"
+            step="0.01"
+            [ngClass]="{'is-invalid': contributorForm.get('subPublisherPercentage')?.invalid && contributorForm.get('subPublisherPercentage')?.touched}">
+          <div class="invalid-feedback small" *ngIf="contributorForm.get('subPublisherPercentage')?.errors?.['min'] || contributorForm.get('subPublisherPercentage')?.errors?.['max']">
+            Must be between 0 and 100
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary btn-sm" (click)="modal.close()">Cancel</button>
+    <button 
+      type="button" 
+      class="btn btn-primary btn-sm" 
+      [disabled]="contributorForm.invalid || loading"
+      (click)="onSubmit()">
+      <span class="spinner-border spinner-border-sm me-2" *ngIf="loading"></span>
+      Add Contributor
+    </button>
+  </div>
+</ng-template>

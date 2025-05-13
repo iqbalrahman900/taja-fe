@@ -1,0 +1,507 @@
+<!-- src/app/songwriter/songwriter.component.html -->
+<div class="content-wrapper">
+  <div class="content-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h2>Song Writers</h2>
+      <div class="header-actions">
+        <div class="input-group me-3" style="width: 300px;">
+          <input 
+            type="text" 
+            class="form-control" 
+            placeholder="Search songwriters..." 
+            [(ngModel)]="searchTerm"
+            (keyup.enter)="onSearch()">
+          <button class="btn btn-outline-secondary" type="button" (click)="onSearch()">
+            <i class="bi bi-search"></i>
+          </button>
+        </div>
+        <button class="btn btn-primary" (click)="openAddModal(addSongwriterModal)">
+          <i class="bi bi-plus-circle me-1"></i> Add Songwriter
+        </button>
+      </div>
+    </div>
+    
+
+    <!-- Improved Notifications Section -->
+    <div class="notifications-section p-3">
+      <div class="row">
+        <!-- Upcoming Birthdays -->
+        <div class="col-md-6 mb-3" *ngIf="upcomingBirthdays && upcomingBirthdays.length > 0">
+          <div class="alert alert-info">
+            <h5 class="alert-heading">
+              <i class="bi bi-calendar-event me-2"></i>Upcoming Birthdays (Next 7 Days)
+            </h5>
+            <hr>
+            <ul class="mb-0 list-unstyled">
+              <li *ngFor="let sw of upcomingBirthdays" class="mb-2">
+                <strong>{{ sw.name }}</strong>: 
+                {{ calculateUpcomingBirthday(sw.dateOfBirth) | date:'MMM d' }}
+                <a [routerLink]="" (click)="openUpdateModal(sw)" class="text-primary ms-2">
+                  <small><i class="fa fa-edit"></i> View</small>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-md-6 mb-3" *ngIf="upcomingBirthdays && upcomingBirthdays.length === 0">
+          <div class="alert alert-info">
+            <h5 class="alert-heading">
+              <i class="bi bi-calendar-event me-2"></i>Upcoming Birthdays
+            </h5>
+            <hr>
+            <p class="mb-0">No birthdays within the next 7 days</p>
+          </div>
+        </div>
+        
+        <!-- Expiring Contracts -->
+        <div class="col-md-6 mb-3" *ngIf="expiringContracts && expiringContracts.length > 0">
+          <div class="alert alert-warning">
+            <h5 class="alert-heading">
+              <i class="bi bi-exclamation-triangle me-2"></i>Contracts Expiring Within a Month
+            </h5>
+            <hr>
+            <ul class="mb-0 list-unstyled">
+              <li *ngFor="let sw of expiringContracts" class="mb-2">
+                <strong>{{ sw.name }}</strong>: 
+                Expires {{ sw.contract?.endDate | date:'MMM d, yyyy' }}
+                <span class="badge bg-danger ms-1" *ngIf="isExpiringWithinDays(sw.contract?.endDate, 7)">Soon!</span>
+                <a [routerLink]="" (click)="openUpdateModal(sw)" class="text-primary ms-2">
+                  <small><i class="fa fa-edit"></i> View</small>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-md-6 mb-3" *ngIf="expiringContracts && expiringContracts.length === 0">
+          <div class="alert alert-warning">
+            <h5 class="alert-heading">
+              <i class="bi bi-exclamation-triangle me-2"></i>Contracts Expiring
+            </h5>
+            <hr>
+            <p class="mb-0">No contracts expiring within the next month</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th style="width: 40px"></th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Contact</th>
+              <th>IC Number</th>
+              <th>TIN Number</th>
+              <th>MACP</th>
+              <th>Pseudonym</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="loading">
+              <td colspan="9" class="text-center">Loading...</td>
+            </tr>
+            <tr *ngIf="!loading && songwriters.length === 0">
+              <td colspan="9" class="text-center">No songwriters found</td>
+            </tr>
+
+            <ng-container *ngFor="let songwriter of songwriters; let i = index">
+              <!-- Main row -->
+              <tr>
+                <td>
+                  <button class="btn btn-sm btn-light" (click)="toggleDetailView(i)">
+                    <i class="fa" [ngClass]="expandedRows[i] ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                  </button>
+                </td>
+                <td>{{ songwriter.name }}</td>
+                <td>{{ songwriter.email }}</td>
+                <td>{{ songwriter.contactNumber }}</td>
+                <td>{{ songwriter.icNumber || '-' }}</td>
+                <td>{{ songwriter.tinNumber || '-' }}</td>
+                <td>
+                  <span class="badge" [ngClass]="songwriter.macp ? 'bg-success' : 'bg-secondary'">
+                    {{ songwriter.macp ? 'Yes' : 'No' }}
+                  </span>
+                </td>
+                <td>{{ formatPenNames(songwriter.penNames) }}</td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary me-1" (click)="toggleDetailView(i)">
+                    <i class="fa fa-eye"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary me-1" (click)="openUpdateModal(songwriter)">
+                    <i class="fa fa-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="confirmDelete(songwriter)">
+                    <i class="fa fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Detail row -->
+              <tr *ngIf="expandedRows[i]">
+                <td colspan="9" class="border-0 p-0">
+                  <div class="detail-view p-3 mb-3 bg-light rounded border">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <h5 class="text-primary mb-3">Songwriter Details</h5>
+                        <div class="mb-3">
+                          <strong>Full Name:</strong> {{ songwriter.name }}
+                        </div>
+                        <div class="mb-3">
+                          <strong>Contact Info:</strong>
+                          <div class="ms-3">
+                            <div>Email: {{ songwriter.email }}</div>
+                            <div>Phone: {{ songwriter.contactNumber }}</div>
+                            <div>Address: {{ songwriter.address || 'Not provided' }}</div>
+                            <div>IC Number: {{ songwriter.icNumber || 'Not provided' }}</div>
+                            <div>TIN Number: {{ songwriter.tinNumber || 'Not provided' }}</div>
+                            <div>MACP Member: 
+                              <span class="badge" [ngClass]="songwriter.macp ? 'bg-success' : 'bg-secondary'">
+                                {{ songwriter.macp ? 'Yes' : 'No' }}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="mb-3">
+                          <strong>Date of Birth:</strong> {{ songwriter.dateOfBirth | date:'longDate' }}
+                        </div>
+
+                        <div class="mb-3">
+                          <strong>Pseudonym:</strong>
+                          <div class="ms-3">
+                            <div *ngIf="!songwriter.penNames || songwriter.penNames.length === 0">No Pseudonym</div>
+                            <ul class="list-unstyled" *ngIf="songwriter.penNames && songwriter.penNames.length > 0">
+                              <li *ngFor="let pen of songwriter.penNames" class="mb-1">
+                                <span class="badge" [ngClass]="pen.isActive ? 'bg-success' : 'bg-secondary'">
+                                  {{ pen.name }}
+                                </span>
+                                <small *ngIf="!pen.isActive" class="text-muted ms-2">(Inactive)</small>
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="col-md-6">
+                        <h5 class="text-primary mb-3">Contract Information</h5>
+                        <div *ngIf="songwriter.contract" class="mb-3">
+                          <div class="mb-2"><strong>Contract Type:</strong> {{ songwriter.contract.type }}</div>
+                          <div class="mb-2"><strong>Start Date:</strong> {{ songwriter.contract.startDate | date:'mediumDate' }}</div>
+                          <div class="mb-2" *ngIf="songwriter.contract.endDate">
+                            <strong>End Date:</strong> {{ songwriter.contract.endDate | date:'mediumDate' }}
+                          </div>
+                          <div class="mb-2" *ngIf="songwriter.contract.terms">
+                            <strong>Terms:</strong> {{ songwriter.contract.terms }}
+                          </div>
+                        </div>
+                        <div *ngIf="!songwriter.contract" class="text-muted">No contract information available</div>
+
+                        <h5 class="text-primary mb-3 mt-4">Deal Information</h5>
+                        <div class="mb-3">
+                          <p *ngIf="songwriter.deal">{{ songwriter.deal }}</p>
+                          <p *ngIf="!songwriter.deal" class="text-muted">No deal information available</p>
+                        </div>
+
+                        <h5 class="text-primary mb-3">Heir Information</h5>
+                        <div *ngIf="songwriter.heir" class="mb-3">
+                          <div class="mb-2"><strong>Name:</strong> {{ songwriter.heir.name }}</div>
+                          <div class="mb-2"><strong>Contact:</strong> {{ songwriter.heir.contactNumber }}</div>
+                          <div class="mb-2"><strong>Relationship:</strong> {{ songwriter.heir.relationship }}</div>
+                        </div>
+                        <div *ngIf="!songwriter.heir" class="text-muted">No heir information available</div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Pagination -->
+      <div class="d-flex justify-content-between align-items-center mt-3" *ngIf="totalSongwriters > 0">
+        <div>
+          Showing {{ (currentPage - 1) * pageSize + 1 }} to 
+          {{ currentPage * pageSize > totalSongwriters ? totalSongwriters : currentPage * pageSize }}
+          of {{ totalSongwriters }} entries
+        </div>
+        <ngb-pagination
+          [collectionSize]="totalSongwriters"
+          [(page)]="currentPage"
+          [pageSize]="pageSize"
+          [maxSize]="5"
+          [rotate]="true"
+          [boundaryLinks]="true"
+          (pageChange)="onPageChange($event)">
+        </ngb-pagination>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Songwriter Modal -->
+<ng-template #addSongwriterModal let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title">Add New Songwriter</h4>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="songwriterForm" (ngSubmit)="onSubmit()">
+      <div class="alert alert-danger" *ngIf="formError">{{ formError }}</div>
+      
+      <div class="mb-3">
+        <label for="name" class="form-label">Full Name *</label>
+        <input 
+          type="text" 
+          class="form-control" 
+          id="name" 
+          formControlName="name"
+          [ngClass]="{'is-invalid': formSubmitted && songwriterForm.get('name')?.errors}"
+        >
+        <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('name')?.errors?.['required']">
+          Name is required
+        </div>
+      </div>
+      
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="email" class="form-label">Email *</label>
+          <input 
+            type="email" 
+            class="form-control" 
+            id="email" 
+            formControlName="email"
+            [ngClass]="{'is-invalid': formSubmitted && songwriterForm.get('email')?.errors}"
+          >
+          <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('email')?.errors?.['required']">
+            Email is required
+          </div>
+          <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('email')?.errors?.['email']">
+            Please enter a valid email
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label for="contactNumber" class="form-label">Contact Number *</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="contactNumber" 
+            formControlName="contactNumber"
+            [ngClass]="{'is-invalid': formSubmitted && songwriterForm.get('contactNumber')?.errors}"
+          >
+          <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('contactNumber')?.errors?.['required']">
+            Contact number is required
+          </div>
+        </div>
+      </div>
+      
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="icNumber" class="form-label">IC Number</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="icNumber" 
+            formControlName="icNumber"
+            placeholder="Enter IC number"
+          >
+        </div>
+        <div class="col-md-6">
+          <label for="tinNumber" class="form-label">TIN Number</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="tinNumber" 
+            formControlName="tinNumber"
+            placeholder="Enter TIN number"
+          >
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="address" class="form-label">Address</label>
+          <textarea 
+            class="form-control" 
+            id="address" 
+            formControlName="address"
+            placeholder="Enter full address"
+            rows="2"
+          ></textarea>
+        </div>
+        <div class="col-md-6">
+          <label for="dateOfBirth" class="form-label">Date of Birth *</label>
+          <input 
+            type="date" 
+            class="form-control" 
+            id="dateOfBirth" 
+            formControlName="dateOfBirth"
+            [ngClass]="{'is-invalid': formSubmitted && songwriterForm.get('dateOfBirth')?.errors}"
+          >
+          <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('dateOfBirth')?.errors?.['required']">
+            Date of birth is required
+          </div>
+          <div class="mt-3">
+            <div class="form-check">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="macp" 
+                formControlName="macp"
+              >
+              <label class="form-check-label" for="macp">
+                MACP Member
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-3">
+        <label class="form-label">Pseudonym *</label>
+        <div formArrayName="penNames">
+          <div class="input-group mb-2" *ngFor="let penName of penNames.controls; let i = index" [formGroupName]="i">
+            <input 
+              type="text" 
+              class="form-control" 
+              formControlName="name"
+              placeholder="Pseudonym"
+              [ngClass]="{'is-invalid': formSubmitted && penNames.at(i).get('name')?.errors}"
+            >
+            <div class="input-group-text">
+              <input class="form-check-input mt-0" type="checkbox" formControlName="isActive">
+              <span class="ms-1">Active</span>
+            </div>
+            <button 
+              type="button" 
+              class="btn btn-outline-danger" 
+              (click)="removePenName(i)"
+              [disabled]="penNames.length === 1"
+            >
+              <i class="fa fa-trash"></i>
+            </button>
+            <div class="invalid-feedback" *ngIf="formSubmitted && penNames.at(i).get('name')?.errors?.['required']">
+              Pseudonym is required
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="addPenName()">
+            <i class="bi bi-plus-circle me-1"></i> Add Another Pseudonym
+          </button>
+        </div>
+      </div>
+      
+      <div class="mb-3" formGroupName="contract">
+        <label class="form-label">Contract Details</label>
+        <div class="row mb-2">
+          <div class="col-md-6">
+            <label for="contractType" class="form-label">Contract Type *</label>
+            <select 
+              class="form-select" 
+              id="contractType" 
+              formControlName="type"
+              [ngClass]="{'is-invalid': formSubmitted && songwriterForm.get('contract.type')?.errors}"
+            >
+              <option value="">Select Type</option>
+              <option value="Exclusive">Exclusive</option>
+              <option value="Non-exclusive">Non-exclusive</option>
+              <option value="Single">Single</option>
+              <option value="Co-publishing">Co-publishing</option>
+            </select>
+            <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('contract.type')?.errors?.['required']">
+              Contract type is required
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label for="startDate" class="form-label">Start Date *</label>
+            <input 
+              type="date" 
+              class="form-control" 
+              id="startDate" 
+              formControlName="startDate"
+              [ngClass]="{'is-invalid': formSubmitted && songwriterForm.get('contract.startDate')?.errors}"
+            >
+            <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('contract.startDate')?.errors?.['required']">
+              Start date is required
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <label for="endDate" class="form-label">End Date</label>
+            <input type="date" class="form-control" id="endDate" formControlName="endDate">
+          </div>
+          <div class="col-md-6">
+            <label for="terms" class="form-label">Terms</label>
+            <textarea class="form-control" id="terms" rows="2" formControlName="terms"></textarea>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-3">
+        <label for="deal" class="form-label">Deal Information</label>
+        <textarea class="form-control" id="deal" rows="2" formControlName="deal" 
+          placeholder="e.g., 50% publishing royalties"></textarea>
+      </div>
+      
+      <div class="mb-3" formGroupName="heir">
+        <label class="form-label">Heir (Waris) Information</label>
+        <div class="row mb-2">
+          <div class="col-md-6">
+            <label for="heirName" class="form-label">Name *</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="heirName" 
+              formControlName="name"
+              [ngClass]="{'is-invalid': formSubmitted && songwriterForm.get('heir.name')?.errors}"
+            >
+            <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('heir.name')?.errors?.['required']">
+              Heir name is required
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label for="heirContact" class="form-label">Contact Number *</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="heirContact" 
+              formControlName="contactNumber"
+              [ngClass]="{'is-invalid': formSubmitted && songwriterForm.get('heir.contactNumber')?.errors}"
+            >
+            <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('heir.contactNumber')?.errors?.['required']">
+              Contact number is required
+            </div>Ï
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12">
+            <label for="relationship" class="form-label">Relationship *</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="relationship" 
+              formControlName="relationship"
+              placeholder="e.g., Spouse, Child, Parent"
+              [ngClass]="{'is-invalid': formSubmitted && songwriterForm.get('heir.relationship')?.errors}"
+            >
+            <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('heir.relationship')?.errors?.['required']">
+              Relationship is required
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">Cancel</button>
+    <button type="button" class="btn btn-primary" (click)="onSubmit()" [disabled]="loading">
+      <span class="spinner-border spinner-border-sm me-1" *ngIf="loading"></span>
+      Save Songwriter
+    </button>
+  </div>
+</ng-template>
