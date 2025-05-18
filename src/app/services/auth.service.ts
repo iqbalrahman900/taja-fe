@@ -6,7 +6,7 @@ import { catchError, map, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 
 // Environment configuration
-const API_URL = 'http://localhost:3000'; // Update this with your API URL
+const API_URL = 'http://13.215.173.58:3000'; // Update this with your API URL
 
 export interface User {
   id: string;

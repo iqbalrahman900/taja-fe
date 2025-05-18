@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 // Environment configuration
-const API_URL = 'http://localhost:3000'; // Update this with your API URL
+const API_URL = 'http://13.215.173.58:3000'; // Update this with your API URL
 
 export enum CatalogStatus {
   PENDING = 'pending',
