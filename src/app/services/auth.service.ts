@@ -6,7 +6,7 @@ import { catchError, map, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 
 // Environment configuration
-const API_URL = '/api'; // Changed from 'https://13.215.173.58' to use the proxy
+const API_URL = 'https://13.215.173.58'; // Update this with your API URL
 
 export interface User {
   id: string;
