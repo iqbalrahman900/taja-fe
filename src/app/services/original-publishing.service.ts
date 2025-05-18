@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-const API_URL = 'http://13.215.173.58:3000';
+const API_URL = 'https://13.215.173.58';
 
 export interface Contract {
   type: string;
