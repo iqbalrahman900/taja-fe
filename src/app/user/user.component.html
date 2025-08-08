@@ -1,0 +1,227 @@
+<!-- src/app/user/user.component.html -->
+<div class="user-management">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="title-section">
+      <h2>User Management</h2>
+      <p>Manage system users and their permissions</p>
+    </div>
+    <div class="action-section">
+      <button class="btn-create" (click)="openCreateModal()">
+        <span class="btn-icon">+</span>
+        Create New User
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filter-item">
+      <label>
+        <input type="checkbox" [(ngModel)]="includeInactive" (change)="loadUsers()">
+        Show Inactive Users
+      </label>
+    </div>
+    <div class="filter-item">
+      <select [(ngModel)]="roleFilter" (change)="loadUsers()" class="filter-select">
+        <option value="">All Roles</option>
+        <option value="admin">Admin</option>
+        <option value="user">User</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading users...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="error-state">
+    <p>{{ error }}</p>
+    <button class="btn-retry" (click)="loadUsers()">Retry</button>
+  </div>
+
+  <!-- Users Table -->
+  <div *ngIf="!loading && !error" class="table-container">
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Full Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Company</th>
+          <th>Status</th>
+          <th>Created By</th>
+          <th>Created At</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of filteredUsers" [ngClass]="{'inactive-row': !user.isActive}">
+          <td class="username-cell">
+            <div class="user-avatar">{{ user.username.charAt(0).toUpperCase() }}</div>
+            <span>{{ user.username }}</span>
+          </td>
+          <td>{{ user.fullName || '-' }}</td>
+          <td>{{ user.email || '-' }}</td>
+          <td>
+            <span class="role-badge" [ngClass]="{'admin-role': user.role === 'admin'}">
+              {{ user.role }}
+            </span>
+          </td>
+          <td>{{ user.companyName }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="{'active': user.isActive, 'inactive': !user.isActive}">
+              {{ user.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+          <td>{{ user.createdBy?.username || 'System' }}</td>
+          <td>{{ user.createdAt | date:'dd/MM/yyyy' }}</td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn-action edit" (click)="editUser(user)" title="Edit User">
+                ✏️
+              </button>
+              <button 
+                class="btn-action toggle" 
+                (click)="toggleUserStatus(user)"
+                [title]="user.isActive ? 'Deactivate User' : 'Activate User'">
+                {{ user.isActive ? '🔒' : '🔓' }}
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredUsers.length === 0" class="empty-state">
+      <p>No users found</p>
+      <button class="btn-create" (click)="openCreateModal()">
+        Create First User
+      </button>
+    </div>
+  </div>
+
+  <!-- User Stats -->
+  <div *ngIf="!loading && users.length > 0" class="stats-section">
+    <div class="stat-item">
+      <span class="stat-number">{{ getTotalUsers() }}</span>
+      <span class="stat-label">Total Users</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number">{{ getActiveUsers() }}</span>
+      <span class="stat-label">Active Users</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number">{{ getAdminUsers() }}</span>
+      <span class="stat-label">Admin Users</span>
+    </div>
+  </div>
+</div>
+
+<!-- Create User Modal -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Create New User</h3>
+      <button class="btn-close" (click)="closeCreateModal()">×</button>
+    </div>
+    
+    <form [formGroup]="createUserForm" (ngSubmit)="onCreateUser()" class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="username">Username *</label>
+          <input 
+            type="text" 
+            id="username" 
+            formControlName="username"
+            placeholder="Enter username"
+            [class.error]="createUserForm.get('username')?.invalid && createUserForm.get('username')?.touched">
+          <div class="error-message" *ngIf="createUserForm.get('username')?.invalid && createUserForm.get('username')?.touched">
+            Username is required (min 3 characters)
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="fullName">Full Name</label>
+          <input 
+            type="text" 
+            id="fullName" 
+            formControlName="fullName"
+            placeholder="Enter full name">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input 
+            type="email" 
+            id="email" 
+            formControlName="email"
+            placeholder="Enter email address"
+            [class.error]="createUserForm.get('email')?.invalid && createUserForm.get('email')?.touched">
+          <div class="error-message" *ngIf="createUserForm.get('email')?.invalid && createUserForm.get('email')?.touched">
+            Please enter a valid email address
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="companyName">Company Name *</label>
+          <input 
+            type="text" 
+            id="companyName" 
+            formControlName="companyName"
+            placeholder="Enter company name"
+            [class.error]="createUserForm.get('companyName')?.invalid && createUserForm.get('companyName')?.touched">
+          <div class="error-message" *ngIf="createUserForm.get('companyName')?.invalid && createUserForm.get('companyName')?.touched">
+            Company name is required
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="password">Password *</label>
+          <input 
+            type="password" 
+            id="password" 
+            formControlName="password"
+            placeholder="Enter password"
+            [class.error]="createUserForm.get('password')?.invalid && createUserForm.get('password')?.touched">
+          <div class="error-message" *ngIf="createUserForm.get('password')?.invalid && createUserForm.get('password')?.touched">
+            Password is required (min 6 characters)
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="role">Role *</label>
+          <select 
+            id="role" 
+            formControlName="role"
+            [class.error]="createUserForm.get('role')?.invalid && createUserForm.get('role')?.touched">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" (click)="closeCreateModal()">
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          class="btn-submit" 
+          [disabled]="createUserForm.invalid || creatingUser">
+          <span *ngIf="creatingUser" class="spinner-small"></span>
+          {{ creatingUser ? 'Creating...' : 'Create User' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

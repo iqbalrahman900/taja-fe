@@ -6,6 +6,7 @@ import { User } from './auth.service';
 
 // Environment configuration
 const API_URL = 'https://13.215.173.58'; // Update this with your API URL
+// const API_URL = 'http://localhost:3000'; 
 
 export interface CreateUserRequest {
   username: string;

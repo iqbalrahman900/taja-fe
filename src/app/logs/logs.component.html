@@ -1,0 +1,261 @@
+<!-- src/app/logs/logs.component.html -->
+<div class="logs-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="title-section">
+      <h2>Activity Logs</h2>
+      <p>Monitor all user activities and system changes</p>
+    </div>
+    <div class="stats-section">
+      <div class="stat-item">
+        <span class="stat-number">{{ totalLogs }}</span>
+        <span class="stat-label">Total Logs</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">{{ todayLogs }}</span>
+        <span class="stat-label">Today</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filter-row">
+      <div class="filter-group">
+        <label for="userFilter">User</label>
+        <select id="userFilter" [(ngModel)]="filters.userId" (change)="applyFilters()" class="filter-select">
+          <option value="">All Users</option>
+          <option *ngFor="let user of uniqueUsers" [value]="user.id">{{ user.username }}</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="actionFilter">Action</label>
+        <select id="actionFilter" [(ngModel)]="filters.action" (change)="applyFilters()" class="filter-select">
+          <option value="">All Actions</option>
+          <option value="CREATE">Create</option>
+          <option value="UPDATE">Update</option>
+          <option value="DELETE">Delete</option>
+          <option value="VIEW">View</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="entityFilter">Entity Type</label>
+        <select id="entityFilter" [(ngModel)]="filters.entityType" (change)="applyFilters()" class="filter-select">
+          <option value="">All Types</option>
+          <option value="Catalog">Catalog</option>
+          <option value="User">User</option>
+          <option value="Contributor">Contributor</option>
+          <option value="Distribution">Distribution</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="startDate">Start Date</label>
+        <input type="date" id="startDate" [(ngModel)]="filters.startDate" (change)="applyFilters()" class="filter-input">
+      </div>
+
+      <div class="filter-group">
+        <label for="endDate">End Date</label>
+        <input type="date" id="endDate" [(ngModel)]="filters.endDate" (change)="applyFilters()" class="filter-input">
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn-filter" (click)="applyFilters()">
+          <span class="btn-icon">🔍</span>
+          Filter
+        </button>
+        <button class="btn-clear" (click)="clearFilters()">
+          <span class="btn-icon">🗑️</span>
+          Clear
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading activity logs...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="error-state">
+    <p>{{ error }}</p>
+    <button class="btn-retry" (click)="loadLogs()">Retry</button>
+  </div>
+
+  <!-- Logs Table -->
+  <div *ngIf="!loading && !error" class="table-container">
+    <table class="logs-table">
+      <thead>
+        <tr>
+          <th>Date & Time</th>
+          <th>User</th>
+          <th>Action</th>
+          <th>Entity</th>
+          <th>Details</th>
+          <th>IP Address</th>
+          <th>Changes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let log of logs" [ngClass]="getLogRowClass(log.action)" (click)="selectLog(log)">
+          <td class="timestamp-cell">
+            <div class="timestamp">{{ log.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</div>
+            <div class="time-ago">{{ getTimeAgo(log.createdAt) }}</div>
+          </td>
+          
+          <td class="user-cell">
+            <div class="user-info">
+              <div class="user-avatar">{{ log.username.charAt(0).toUpperCase() }}</div>
+              <div class="user-details">
+                <div class="username">{{ log.username }}</div>
+                <div class="user-role" *ngIf="log.userId?.role">{{ log.userId.role }}</div>
+              </div>
+            </div>
+          </td>
+          
+          <td class="action-cell">
+            <span class="action-badge" [ngClass]="getActionClass(log.action)">
+              <span class="action-icon">{{ getActionIcon(log.action) }}</span>
+              {{ log.action }}
+            </span>
+          </td>
+          
+          <td class="entity-cell">
+            <div class="entity-info">
+              <div class="entity-type">{{ log.entityType }}</div>
+              <div class="entity-id" *ngIf="log.metadata && log.metadata.tapNumber">
+                {{ log.metadata.tapNumber }}
+              </div>
+            </div>
+          </td>
+          
+          <td class="details-cell">
+            <div class="operation" *ngIf="log.metadata && log.metadata.operation">
+              {{ formatOperation(log.metadata.operation) }}
+            </div>
+            <div class="tap-number" *ngIf="log.metadata && log.metadata.tapNumber">
+              TAP: {{ log.metadata.tapNumber }}
+            </div>
+          </td>
+          
+          <td class="ip-cell">
+            <span class="ip-address">{{ log.ipAddress || 'Unknown' }}</span>
+          </td>
+          
+          <td class="changes-cell">
+            <button class="btn-view-changes" (click)="viewChanges(log); $event.stopPropagation()">
+              <span class="btn-icon">👁️</span>
+              <span class="changes-count" *ngIf="getChangesCount(log.changes) > 0">
+                {{ getChangesCount(log.changes) }}
+              </span>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Empty State -->
+    <div *ngIf="logs.length === 0" class="empty-state">
+      <div class="empty-icon">📋</div>
+      <p>No activity logs found</p>
+      <button class="btn-clear" (click)="clearFilters()">Clear Filters</button>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!loading && logs.length > 0" class="pagination-section">
+    <div class="pagination-info">
+      Showing {{ getStartIndex() }} to {{ getEndIndex() }} of {{ totalLogs }} logs
+    </div>
+    
+    <div class="pagination-controls">
+      <button class="btn-page" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">
+        ‹ Previous
+      </button>
+      
+      <span class="page-numbers">
+        <button 
+          *ngFor="let page of getPageNumbers()" 
+          class="btn-page-number" 
+          [ngClass]="{'active': page === currentPage}"
+          (click)="changePage(page)">
+          {{ page }}
+        </button>
+      </span>
+      
+      <button class="btn-page" [disabled]="currentPage === totalPages" (click)="changePage(currentPage + 1)">
+        Next ›
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Changes Modal -->
+<div class="modal-overlay" *ngIf="showChangesModal" (click)="closeChangesModal()">
+  <div class="modal-content changes-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Activity Details</h3>
+      <button class="btn-close" (click)="closeChangesModal()">×</button>
+    </div>
+    
+    <div class="modal-body" *ngIf="selectedLog">
+      <div class="log-details">
+        <div class="detail-row">
+          <span class="detail-label">User:</span>
+          <span class="detail-value">{{ selectedLog.username }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Action:</span>
+          <span class="detail-value">
+            <span class="action-badge" [ngClass]="getActionClass(selectedLog.action)">
+              {{ selectedLog.action }}
+            </span>
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Entity:</span>
+          <span class="detail-value">{{ selectedLog.entityType }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Date:</span>
+          <span class="detail-value">{{ selectedLog.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+        </div>
+        <div class="detail-row" *ngIf="selectedLog.ipAddress">
+          <span class="detail-label">IP Address:</span>
+          <span class="detail-value">{{ selectedLog.ipAddress }}</span>
+        </div>
+      </div>
+
+      <div class="changes-section" *ngIf="selectedLog.changes && getChangesCount(selectedLog.changes) > 0">
+        <h4>Changes Made:</h4>
+        <div class="changes-list">
+          <div class="change-item" *ngFor="let change of getChangesArray(selectedLog.changes)">
+            <div class="change-field">{{ change.field }}:</div>
+            <div class="change-values" *ngIf="change.from !== undefined && change.to !== undefined">
+              <span class="old-value">{{ formatValue(change.from) }}</span>
+              <span class="arrow">→</span>
+              <span class="new-value">{{ formatValue(change.to) }}</span>
+            </div>
+            <div class="change-values" *ngIf="change.from === undefined || change.to === undefined">
+              <span class="new-value">{{ formatValue(change.value || change.to || change.from) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="metadata-section" *ngIf="selectedLog.metadata">
+        <h4>Additional Information:</h4>
+        <div class="metadata-list">
+          <div class="metadata-item" *ngFor="let meta of getMetadataArray(selectedLog.metadata)">
+            <span class="meta-key">{{ meta.key }}:</span>
+            <span class="meta-value">{{ meta.value }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

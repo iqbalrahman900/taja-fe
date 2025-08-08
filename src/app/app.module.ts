@@ -29,6 +29,8 @@ import { UpdateTaggingSongComponent } from './modal/update-tagging-song/update-t
 import { UpdateCatalogModalComponent } from './modal/update-catalog-modal/update-catalog-modal.component';
 import { UpdateContributorModalComponent } from './modal/update-contributor-modal/update-contributor-modal.component';
 import { CountrySelectionModalComponent } from './modal/country-selection-modal/country-selection-modal.component';
+import { UserComponent } from './user/user.component';
+import { LogsComponent } from './logs/logs.component';
 
 
 @NgModule({
@@ -52,7 +54,9 @@ import { CountrySelectionModalComponent } from './modal/country-selection-modal/
     UpdateTaggingSongComponent,
     UpdateCatalogModalComponent,
     UpdateContributorModalComponent,
-    CountrySelectionModalComponent
+    CountrySelectionModalComponent,
+    UserComponent,
+    LogsComponent
   ],
   imports: [
     BrowserModule,

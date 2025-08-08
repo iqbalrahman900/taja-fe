@@ -31,6 +31,8 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     this.currentUser = this.authService.currentUserValue;
     this.isAdmin = this.authService.isAdmin();
+    console.log('Current user:', this.currentUser);
+    console.log('Is admin:', this.isAdmin);
     this.loadDashboardData();
   }
 
@@ -128,9 +130,35 @@ export class DashboardComponent implements OnInit {
       case 'originalPublishing':
         this.router.navigate(['/originalPublishing']);
         break;
+      case 'user':
+        // Only allow navigation to user management if user is admin
+        if (this.isAdmin) {
+          this.router.navigate(['/user']);
+        } else {
+          console.warn('Access denied: User management is only available for admins');
+          this.activeMenuItem = 'dashboard';
+          this.router.navigate(['/dashboard']);
+        }
+        break;
+
+        case 'logs':
+        // Only allow navigation to user management if user is admin
+        if (this.isAdmin) {
+          this.router.navigate(['/logs']);
+        } else {
+          console.warn('Access denied: User management is only available for admins');
+          this.activeMenuItem = 'dashboard';
+          this.router.navigate(['/dashboard']);
+        }
+        break;
       default:
         this.router.navigate(['/dashboard']);
     }
+  }
+
+  // Helper method to check admin status (can be used in template)
+  checkAdminAccess(): boolean {
+    return this.isAdmin;
   }
 
   logout(): void {

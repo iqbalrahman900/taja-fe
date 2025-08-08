@@ -15,7 +15,9 @@
         <div class="user-avatar">{{ currentUser && currentUser.username ? currentUser.username.charAt(0).toUpperCase() : 'U' }}</div>
         <div class="user-details" *ngIf="!sidebarCollapsed">
           <div class="user-name">{{ currentUser?.username }}</div>
-          <div class="user-role">{{ currentUser?.role }}</div>
+          <div class="user-role" [ngClass]="{'admin-role': currentUser?.role === 'admin'}">
+            {{ currentUser?.role }}
+          </div>
         </div>
       </div>
       
@@ -36,20 +38,37 @@
         </a>
         
         <a class="menu-item" [ngClass]="{'active': activeMenuItem === 'songwriters'}" (click)="setActiveMenuItem('songwriters')">
-            <span class="menu-icon">✍️</span>
-            <span class="menu-text" *ngIf="!sidebarCollapsed">Song Writers</span>
-          </a>
+          <span class="menu-icon">✍️</span>
+          <span class="menu-text" *ngIf="!sidebarCollapsed">Song Writers</span>
+        </a>
           
-          <a class="menu-item" [ngClass]="{'active': activeMenuItem === 'originalPublishing'}" (click)="setActiveMenuItem('originalPublishing')">
+        <a class="menu-item" [ngClass]="{'active': activeMenuItem === 'originalPublishing'}" (click)="setActiveMenuItem('originalPublishing')">
+          <span class="menu-icon">📄</span>
+          <span class="menu-text" *ngIf="!sidebarCollapsed">Original Publishing</span>
+        </a>
+          
+        <a class="menu-item" [ngClass]="{'active': activeMenuItem === 'taggingSong'}" (click)="setActiveMenuItem('taggingSong')">
+          <span class="menu-icon">🏷️</span>
+          <span class="menu-text" *ngIf="!sidebarCollapsed">Tagging Song</span>
+        </a>
+
+        <!-- Admin Only - User Management -->
+        <div *ngIf="isAdmin" class="admin-section">
+          <div class="menu-divider"></div>
+          <div class="admin-label" *ngIf="!sidebarCollapsed" style="padding: 20px;">
+            <span>Admin Panel</span>
+          </div>
+          
+          <a class="menu-item admin-item" [ngClass]="{'active': activeMenuItem === 'user'}" (click)="setActiveMenuItem('user')">
+            <span class="menu-icon">👥</span>
+            <span class="menu-text" *ngIf="!sidebarCollapsed">User Management</span>
+          </a>
+
+           <a class="menu-item admin-item" [ngClass]="{'active': activeMenuItem === 'logs'}" (click)="setActiveMenuItem('logs')">
             <span class="menu-icon">📄</span>
-            <span class="menu-text" *ngIf="!sidebarCollapsed">Original Publishing</span>
+            <span class="menu-text" *ngIf="!sidebarCollapsed">Logs</span>
           </a>
-          
-          <a class="menu-item" [ngClass]="{'active': activeMenuItem === 'taggingSong'}" (click)="setActiveMenuItem('taggingSong')">
-            <span class="menu-icon">🏷️</span> <!-- New tag icon -->
-            <span class="menu-text" *ngIf="!sidebarCollapsed">Tagging Song</span>
-          </a>
-          
+        </div>
         
         <a class="menu-item logout" (click)="logout()">
           <span class="menu-icon">🚪</span>
@@ -68,6 +87,7 @@
           <h1 *ngIf="activeMenuItem === 'songwriters'">Song Writers</h1>
           <h1 *ngIf="activeMenuItem === 'originalPublishing'">Original Publishing</h1>
           <h1 *ngIf="activeMenuItem === 'taggingSong'">Tagging Songs</h1>
+          <h1 *ngIf="activeMenuItem === 'user' && isAdmin">User Management</h1>
         </div>
         
         <div class="header-actions">
@@ -78,6 +98,9 @@
           
           <div class="user-dropdown">
             <span class="welcome-text">Welcome, {{ currentUser?.username }}</span>
+            <span class="user-role-badge" [ngClass]="{'admin-badge': currentUser?.role === 'admin'}">
+              {{ currentUser?.role }}
+            </span>
           </div>
         </div>
       </div>
@@ -85,4 +108,4 @@
       <router-outlet></router-outlet>
     
     </div>
-  </div>
+</div>

@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 
 // Environment configuration
 const API_URL = 'https://13.215.173.58'; // Update this with your API URL
+// const API_URL = 'http://localhost:3000'; // Update this with your API URL
 
 export enum CatalogStatus {
   PENDING = 'pending',

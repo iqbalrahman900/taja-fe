@@ -47,6 +47,8 @@ import { AuthGuard } from './guards/auth.guard';
 import { SongwriterComponent } from './songwriter/songwriter.component';
 import { TaggingSongComponent } from './tagging-song/tagging-song.component';
 import { OriginalPublishingComponent } from './original-publishing/original-publishing.component';
+import { UserComponent } from './user/user.component';
+import { LogsComponent } from './logs/logs.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -61,6 +63,9 @@ const routes: Routes = [
       { path: 'originalPublishing', component: OriginalPublishingComponent },
       { path: 'catalogs', component: CatalogsComponent },
       { path: 'catalog-codes', component: CatalogCodesComponent },
+      { path: 'user', component:  UserComponent},
+      { path: 'logs', component:  LogsComponent},
+      
       { path: 'catalogs/:tapNumber', component: CatalogDetailComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
