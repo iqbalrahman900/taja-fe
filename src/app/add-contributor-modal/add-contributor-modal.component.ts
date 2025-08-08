@@ -5,6 +5,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { CatalogService, CreateContributorDto, Catalog } from '../services/catalog.service';
 import { SongwriterService, Songwriter, PenName } from '../services/songwriter.service';
+import { OriginalPublishingService, OriginalPublishing } from '../services/original-publishing.service'; // Add this import
 
 @Component({
   selector: 'app-add-contributor-modal',
@@ -20,9 +21,12 @@ export class AddContributorModalComponent implements OnInit {
   
   contributorForm!: FormGroup;
   loading = false;
+  loadingPublishers = false; // NEW: Loading state for publishers
   songwriters: Songwriter[] = [];
   availablePenNames: PenName[] = [];
+  originalPublishers: OriginalPublishing[] = []; // NEW: Original publishers from API
   isTajaContributor = false; // Toggle for TAJA vs regular contributor
+  isTajaPublisher = false; // NEW: Toggle for TAJA publisher
   
   // Autocomplete properties
   filteredSongwriters: Songwriter[] = [];
@@ -42,6 +46,8 @@ export class AddContributorModalComponent implements OnInit {
     { value: 'SP', label: 'Sub-Publisher' }
   ];
 
+  // Remove the hardcoded tajaPublishers array - we'll get this from API
+
   // Get reference to the input field
   get songwriterInput() {
     return this.contributorForm.get('songwriterInput');
@@ -52,12 +58,14 @@ export class AddContributorModalComponent implements OnInit {
     private catalogService: CatalogService,
     private toastr: ToastrService,
     private modalService: NgbModal,
-    private songwriterService: SongwriterService
+    private songwriterService: SongwriterService,
+    private originalPublishingService: OriginalPublishingService // Add this injection
   ) { }
 
   ngOnInit(): void {
     this.initForm();
     this.loadSongwriters();
+    this.loadOriginalPublishers(); // Add this call
   }
 
   loadSongwriters(): void {
@@ -75,6 +83,24 @@ export class AddContributorModalComponent implements OnInit {
     });
   }
 
+  // NEW: Load original publishers from API
+  loadOriginalPublishers(): void {
+    this.loadingPublishers = true;
+    this.originalPublishingService.getOriginalPublishings(1, 1000).subscribe({
+      next: (response) => {
+        this.originalPublishers = response.data || [];
+        this.loadingPublishers = false;
+        console.log('Loaded original publishers:', this.originalPublishers);
+      },
+      error: (error) => {
+        this.toastr.error('Failed to load original publishers', 'Error');
+        this.loadingPublishers = false;
+        this.originalPublishers = [];
+        console.error('Error loading original publishers:', error);
+      }
+    });
+  }
+
   initForm(): void {
     this.contributorForm = this.formBuilder.group({
       name: ['', Validators.required],
@@ -88,7 +114,8 @@ export class AddContributorModalComponent implements OnInit {
       publisherName: [''],
       publisherPercentage: [0, [Validators.min(0), Validators.max(100)]],
       subPublisherName: [''],
-      subPublisherPercentage: [0, [Validators.min(0), Validators.max(100)]]
+      subPublisherPercentage: [0, [Validators.min(0), Validators.max(100)]],
+      tajaPublisherSelect: [''] // NEW: Form control for TAJA publisher dropdown
     });
 
     // Initialize filtered songwriters
@@ -219,6 +246,48 @@ export class AddContributorModalComponent implements OnInit {
     }
   }
 
+  // NEW: Handler for TAJA publisher toggle
+  onTajaPublisherToggle(): void {
+    if (this.isTajaPublisher) {
+      // Clear regular publisher fields when switching to TAJA
+      this.contributorForm.patchValue({
+        publisherType: 'OP',
+        publisherName: '',
+        publisherPercentage: 0,
+        tajaPublisherSelect: ''
+      });
+    } else {
+      // Clear TAJA publisher selection when switching to regular
+      this.contributorForm.patchValue({
+        tajaPublisherSelect: '',
+        publisherName: '',
+        publisherPercentage: 0
+      });
+    }
+  }
+
+  // NEW: Handler for TAJA publisher selection
+  onTajaPublisherSelection(): void {
+    const selectedPublisherId = this.contributorForm.get('tajaPublisherSelect')?.value;
+    if (selectedPublisherId) {
+      // Find the selected publisher from the array
+      const selectedPublisher = this.originalPublishers.find(p => p._id === selectedPublisherId);
+      if (selectedPublisher) {
+        // ONLY auto-fill publisher name - don't touch type or percentage
+        this.contributorForm.patchValue({
+          publisherName: selectedPublisher.companyName
+        });
+        
+        console.log('Selected publisher name:', selectedPublisher.companyName);
+      }
+    } else {
+      // Clear publisher name if no selection
+      this.contributorForm.patchValue({
+        publisherName: ''
+      });
+    }
+  }
+
   onPublisherCheckboxChange(event: any): void {
     if (event.target.checked) {
       this.contributorForm.get('publisherName')?.setValue(this.TAJA_ARCHIVE);
@@ -267,6 +336,7 @@ export class AddContributorModalComponent implements OnInit {
     this.highlightedSongwriterIndex = -1;
     this.selectedSongwriterId = '';
     this.isTajaContributor = false;
+    this.isTajaPublisher = false; // NEW: Reset TAJA publisher toggle
     this.loading = false;
   }
 
@@ -287,6 +357,7 @@ export class AddContributorModalComponent implements OnInit {
     delete formData.selectedSongwriter;
     delete formData.selectedPenName;
     delete formData.songwriterInput; // Remove the autocomplete input field
+    delete formData.tajaPublisherSelect; // Remove the TAJA publisher dropdown field
     
     const contributorData: CreateContributorDto = {
       catalogId: this.catalog._id,
@@ -302,6 +373,8 @@ export class AddContributorModalComponent implements OnInit {
         delete (contributorData as any)[key];
       }
     });
+
+    console.log('Submitting contributor data:', contributorData); // Debug log
 
     this.catalogService.addContributor(contributorData).subscribe({
       next: (response) => {

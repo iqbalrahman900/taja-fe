@@ -224,67 +224,124 @@
       <!-- Publisher Information Section -->
       <h6 class="section-title mt-4">Publisher Information</h6>
 
+      <!-- TAJA Publisher Toggle -->
       <div class="row mb-3">
-        <div class="col-md-3">
-          <label for="publisherType" class="form-label">Publisher Type</label>
-          <select
-            class="form-select form-select-sm"
-            id="publisherType"
-            formControlName="publisherType"
-          >
-            <option *ngFor="let type of publisherTypes" [value]="type.value">
-              {{ type.label }} ({{ type.value }})
-            </option>
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label for="publisherName" class="form-label">Publisher Name</label>
-          <div class="input-group input-group-sm">
+        <div class="col-12">
+          <div class="form-check form-switch">
             <input
-              type="text"
-              class="form-control"
-              id="publisherName"
-              formControlName="publisherName"
-              placeholder="Enter publisher name"
+              class="form-check-input"
+              type="checkbox"
+              id="isTajaPublisher"
+              [(ngModel)]="isTajaPublisher"
+              [ngModelOptions]="{ standalone: true }"
+              (change)="onTajaPublisherToggle()"
             />
-            <div class="input-group-text">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  id="useTajaArchivePublisher"
-                  (change)="onPublisherCheckboxChange($event)"
-                />
-                <label class="form-check-label" for="useTajaArchivePublisher">
-                  TAJA
-                </label>
+            <label class="form-check-label" for="isTajaPublisher">
+              TAJA Publisher
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAJA Publisher Dropdown -->
+
+      <!-- Regular Publisher Fields (shown when TAJA toggle is off) -->
+      <div>
+        <div class="row mb-3">
+          <div class="col-md-3">
+            <label for="publisherType" class="form-label">Publisher Type</label>
+            <select
+              class="form-select form-select-sm"
+              id="publisherType"
+              formControlName="publisherType"
+            >
+              <option *ngFor="let type of publisherTypes" [value]="type.value">
+                {{ type.label }} ({{ type.value }})
+              </option>
+            </select>
+          </div>
+          <div class="col-md-6" *ngIf="!isTajaPublisher">
+            <label for="publisherName" class="form-label">Publisher Name</label>
+            <div class="input-group input-group-sm">
+              <input
+                type="text"
+                class="form-control"
+                id="publisherName"
+                formControlName="publisherName"
+                placeholder="Enter publisher name"
+              />
+              <div class="input-group-text">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="useTajaArchivePublisher"
+                    (change)="onPublisherCheckboxChange($event)"
+                  />
+                  <label class="form-check-label" for="useTajaArchivePublisher">
+                    TAJA
+                  </label>
+                </div>
               </div>
             </div>
           </div>
+
+        <div class="col-md-6" *ngIf="isTajaPublisher">
+        <div class="col-12">
+          <label for="tajaPublisherSelect" class="form-label">Select Original Publishing</label>
+          <select
+            class="form-select form-select-sm"
+            id="tajaPublisherSelect"
+            formControlName="tajaPublisherSelect"
+            (change)="onTajaPublisherSelection()"
+            [disabled]="loadingPublishers"
+          >
+            <option value="">
+              {{ loadingPublishers ? '-- Loading Publishers --' : '-- Select Original Publishing --' }}
+            </option>
+            <!-- Add TAJA ARCHIVE as default option -->
+            <option value="TAJA_ARCHIVE" data-name="TAJA ARCHIVE SDN BHD">
+              TAJA ARCHIVE SDN BHD
+            </option>
+            <!-- Separator (optional visual indicator) -->
+            <option disabled>────────────────</option>
+            <!-- API Publishers -->
+            <option *ngFor="let publisher of originalPublishers" [value]="publisher._id" [attr.data-name]="publisher.companyName">
+              {{ publisher.companyName }}
+            </option>
+          </select>
+          <div class="form-text small text-muted" *ngIf="loadingPublishers">
+            Loading original publishing companies...
+          </div>
+          <div class="form-text small text-danger" *ngIf="!loadingPublishers && originalPublishers.length === 0">
+            No original publishing companies found
+          </div>
         </div>
-        <div class="col-md-3">
-          <label for="publisherPercentage" class="form-label"
-            >Publisher %</label
-          >
-          <input
-            type="number"
-            class="form-control form-control-sm"
-            id="publisherPercentage"
-            formControlName="publisherPercentage"
-            min="0"
-            max="100"
-            step="0.01"
-            [ngClass]="{
-              'is-invalid':
-                contributorForm.get('publisherPercentage')?.invalid &&
-                contributorForm.get('publisherPercentage')?.touched
-            }"
-          />
-          <div
-            class="invalid-feedback small"
-            *ngIf="contributorForm.get('publisherPercentage')?.errors?.['min'] || contributorForm.get('publisherPercentage')?.errors?.['max']"
-          >
-            Must be between 0 and 100
+      </div>
+          <div class="col-md-3">
+            <label for="publisherPercentage" class="form-label"
+              >Publisher %</label
+            >
+            <input
+              type="number"
+              class="form-control form-control-sm"
+              id="publisherPercentage"
+              formControlName="publisherPercentage"
+              min="0"
+              max="100"
+              step="0.01"
+              [ngClass]="{
+                'is-invalid':
+                  contributorForm.get('publisherPercentage')?.invalid &&
+                  contributorForm.get('publisherPercentage')?.touched
+              }"
+            />
+            <div
+              class="invalid-feedback small"
+              *ngIf="contributorForm.get('publisherPercentage')?.errors?.['min'] || contributorForm.get('publisherPercentage')?.errors?.['max']"
+            >
+              Must be between 0 and 100
+            </div>
           </div>
         </div>
       </div>
