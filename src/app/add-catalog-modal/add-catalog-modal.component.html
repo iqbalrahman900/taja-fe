@@ -10,17 +10,7 @@
       <h6 class="section-title">Basic Information</h6>
       
       <!-- Performer - Full Width -->
-      <div class="row mb-3">
-        <div class="col-12">
-          <label for="performer" class="form-label">Performer</label>
-          <input 
-            type="text" 
-            class="form-control form-control-sm" 
-            id="performer" 
-            formControlName="performer"
-            placeholder="Artist or band name">
-        </div>
-      </div>
+     
       
       <!-- Title and Song Type Row -->
       <div class="row mb-3">
@@ -64,14 +54,27 @@
         <div class="col-md-4">
           <label for="songType" class="form-label">Song Type <span class="text-danger">*</span></label>
           <select 
+          style="margin-top: 7px;"
             class="form-select form-select-sm" 
             id="songType" 
             formControlName="songType"
             (change)="onSongTypeChange()">
-            <option *ngFor="let type of songTypes" [value]="type">
+            <option *ngFor="let type of songTypes" [value]="type" style="margin-top: 7px;">
               {{ type | titlecase }}
             </option>
           </select>
+        </div>
+      </div>
+
+       <div class="row mb-3">
+        <div class="col-12">
+          <label for="performer" class="form-label">Performer</label>
+          <input 
+            type="text" 
+            class="form-control form-control-sm" 
+            id="performer" 
+            formControlName="performer"
+            placeholder="Artist or band name">
         </div>
       </div>
 

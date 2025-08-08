@@ -24,6 +24,12 @@ export class AddContributorModalComponent implements OnInit {
   availablePenNames: PenName[] = [];
   isTajaContributor = false; // Toggle for TAJA vs regular contributor
   
+  // Autocomplete properties
+  filteredSongwriters: Songwriter[] = [];
+  showSongwriterSuggestions = false;
+  highlightedSongwriterIndex = -1;
+  selectedSongwriterId: string = ''; // Store the selected songwriter's ID
+  
   roleTypes = [
     { value: 'C', label: 'Composer' },
     { value: 'A', label: 'Author' },
@@ -35,6 +41,11 @@ export class AddContributorModalComponent implements OnInit {
     { value: 'OP', label: 'Original Publisher' },
     { value: 'SP', label: 'Sub-Publisher' }
   ];
+
+  // Get reference to the input field
+  get songwriterInput() {
+    return this.contributorForm.get('songwriterInput');
+  }
 
   constructor(
     private formBuilder: FormBuilder,
@@ -54,6 +65,7 @@ export class AddContributorModalComponent implements OnInit {
     this.songwriterService.getSongwriters(1, 1000).subscribe({
       next: (response) => {
         this.songwriters = response.data;
+        this.filteredSongwriters = [...this.songwriters]; // Initialize filtered list
         this.loading = false;
       },
       error: (error) => {
@@ -66,7 +78,8 @@ export class AddContributorModalComponent implements OnInit {
   initForm(): void {
     this.contributorForm = this.formBuilder.group({
       name: ['', Validators.required],
-      selectedSongwriter: [''],
+      songwriterInput: [''], // New input field for autocomplete
+      selectedSongwriter: [''], // Keep this for internal tracking
       selectedPenName: [''],
       role: ['C', Validators.required],
       royaltyPercentage: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
@@ -78,28 +91,8 @@ export class AddContributorModalComponent implements OnInit {
       subPublisherPercentage: [0, [Validators.min(0), Validators.max(100)]]
     });
 
-    // Listen for changes on the songwriter dropdown
-    this.contributorForm.get('selectedSongwriter')?.valueChanges.subscribe(value => {
-      if (value) {
-        const selectedSongwriter = this.songwriters.find(s => s._id === value);
-        if (selectedSongwriter) {
-          // Update name field with songwriter's name
-          this.contributorForm.patchValue({
-            name: selectedSongwriter.name,
-            selectedPenName: '' // Reset pen name selection
-          });
-          
-          // Update available pen names
-          this.availablePenNames = selectedSongwriter.penNames || [];
-        }
-      } else {
-        // Clear pen names if no songwriter selected
-        this.availablePenNames = [];
-        this.contributorForm.patchValue({
-          selectedPenName: ''
-        });
-      }
-    });
+    // Initialize filtered songwriters
+    this.filteredSongwriters = [...this.songwriters];
 
     // Listen for changes on the pen name dropdown
     this.contributorForm.get('selectedPenName')?.valueChanges.subscribe(value => {
@@ -111,9 +104,9 @@ export class AddContributorModalComponent implements OnInit {
             name: selectedPenName.name
           });
         }
-      } else if (this.contributorForm.get('selectedSongwriter')?.value) {
+      } else if (this.selectedSongwriterId) {
         // If pen name is cleared but songwriter is still selected, revert to songwriter name
-        const selectedSongwriter = this.songwriters.find(s => s._id === this.contributorForm.get('selectedSongwriter')?.value);
+        const selectedSongwriter = this.songwriters.find(s => s._id === this.selectedSongwriterId);
         if (selectedSongwriter) {
           this.contributorForm.patchValue({
             name: selectedSongwriter.name
@@ -123,21 +116,106 @@ export class AddContributorModalComponent implements OnInit {
     });
   }
 
-  // Handler for contributor type toggle
-  onContributorTypeChange(): void {
-    if (!this.isTajaContributor) {
-      // Switching to regular contributor - clear songwriter/pen name selections
+  // Autocomplete methods
+  filterSongwriters(event: any): void {
+    const query = event.target.value.toLowerCase().trim();
+    
+    if (query.length === 0) {
+      this.filteredSongwriters = [...this.songwriters];
+      this.showSongwriterSuggestions = false;
+      this.selectedSongwriterId = '';
+      this.availablePenNames = [];
       this.contributorForm.patchValue({
         selectedSongwriter: '',
         selectedPenName: '',
         name: ''
       });
-      this.availablePenNames = [];
     } else {
-      // Switching to TAJA contributor - enable songwriter dropdown
+      this.filteredSongwriters = this.songwriters.filter(songwriter =>
+        songwriter.name.toLowerCase().includes(query)
+      );
+      this.showSongwriterSuggestions = true;
+    }
+    
+    this.highlightedSongwriterIndex = -1;
+  }
+
+  selectSongwriter(songwriter: Songwriter): void {
+    // Update the input field with selected songwriter's name
+    this.contributorForm.patchValue({
+      songwriterInput: songwriter.name,
+      selectedSongwriter: songwriter._id,
+      name: songwriter.name,
+      selectedPenName: '' // Reset pen name selection
+    });
+    
+    // Store the selected songwriter's ID
+    this.selectedSongwriterId = songwriter._id;
+    
+    // Update available pen names
+    this.availablePenNames = songwriter.penNames || [];
+    
+    // Hide suggestions
+    this.showSongwriterSuggestions = false;
+    this.highlightedSongwriterIndex = -1;
+  }
+
+  hideSongwriterSuggestions(): void {
+    // Small delay to allow click events on suggestions to fire
+    setTimeout(() => {
+      this.showSongwriterSuggestions = false;
+      this.highlightedSongwriterIndex = -1;
+    }, 200);
+  }
+
+  onSongwriterKeyDown(event: KeyboardEvent): void {
+    if (!this.showSongwriterSuggestions || this.filteredSongwriters.length === 0) return;
+
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        this.highlightedSongwriterIndex = Math.min(
+          this.highlightedSongwriterIndex + 1,
+          this.filteredSongwriters.length - 1
+        );
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.highlightedSongwriterIndex = Math.max(this.highlightedSongwriterIndex - 1, 0);
+        break;
+      case 'Enter':
+        event.preventDefault();
+        if (this.highlightedSongwriterIndex >= 0) {
+          this.selectSongwriter(this.filteredSongwriters[this.highlightedSongwriterIndex]);
+        }
+        break;
+      case 'Escape':
+        this.showSongwriterSuggestions = false;
+        this.highlightedSongwriterIndex = -1;
+        break;
+    }
+  }
+
+  // Handler for contributor type toggle
+  onContributorTypeChange(): void {
+    if (!this.isTajaContributor) {
+      // Switching to regular contributor - clear songwriter/pen name selections
       this.contributorForm.patchValue({
+        songwriterInput: '',
+        selectedSongwriter: '',
+        selectedPenName: '',
         name: ''
       });
+      this.selectedSongwriterId = '';
+      this.availablePenNames = [];
+      this.showSongwriterSuggestions = false;
+    } else {
+      // Switching to TAJA contributor - enable songwriter autocomplete
+      this.contributorForm.patchValue({
+        songwriterInput: '',
+        name: ''
+      });
+      this.filteredSongwriters = [...this.songwriters];
     }
   }
 
@@ -184,6 +262,10 @@ export class AddContributorModalComponent implements OnInit {
   resetForm(): void {
     this.initForm();
     this.availablePenNames = [];
+    this.filteredSongwriters = [...this.songwriters];
+    this.showSongwriterSuggestions = false;
+    this.highlightedSongwriterIndex = -1;
+    this.selectedSongwriterId = '';
     this.isTajaContributor = false;
     this.loading = false;
   }
@@ -204,6 +286,7 @@ export class AddContributorModalComponent implements OnInit {
     // Remove the selection fields not needed in the API call
     delete formData.selectedSongwriter;
     delete formData.selectedPenName;
+    delete formData.songwriterInput; // Remove the autocomplete input field
     
     const contributorData: CreateContributorDto = {
       catalogId: this.catalog._id,
