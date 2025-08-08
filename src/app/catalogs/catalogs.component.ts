@@ -229,13 +229,7 @@ popularTaggings: { tagging: string; count: number }[] = [];
     this.loadCatalogs();
   }
 
-  onPageChange(page: number): void {
-    this.currentPage = page;
-    this.loadCatalogs();
-    // Reset expanded row when changing page
-    this.expandedCatalogId = null;
-    this.catalogDetails = null;
-  }
+
 
   onTypeChange(): void {
     this.currentPage = 1;
@@ -622,6 +616,7 @@ editCatalog(): void {
 
 loadCatalogs(): void {
   this.loading = true;
+  
   this.catalogService.getCatalogs(
     this.currentPage, 
     this.itemsPerPage, 
@@ -629,14 +624,14 @@ loadCatalogs(): void {
     this.selectedType || undefined,
     this.selectedStatus || undefined,
     undefined, // songType
-    this.selectedTagging || undefined // Add tagging parameter
+    this.selectedTagging || undefined
   ).subscribe({
     next: (response: CatalogResponse) => {
-      // Filter out covers from the main list
-      this.catalogs = response.data.filter(catalog => catalog.versionType !== 'cover');
+      // Don't filter here - let the backend handle pagination
+      this.catalogs = response.data || [];
       
-      // Recalculate total items after filtering
-      this.totalItems = this.catalogs.length;
+      // Use the total from the response, not filtered length
+      this.totalItems = response.total || 0;
       this.loading = false;
       
       // Pre-load contributor info for displayed catalogs
@@ -727,5 +722,59 @@ getMainIpiCode(ipiCode?: string | string[]): string {
   return mainCode ? (typeof mainCode === 'string' ? mainCode.trim() : mainCode) : 
     (Array.isArray(ipiCode) ? ipiCode.join(',') : ipiCode);
 }
+
+
+getTotalPages(): number {
+  return Math.ceil(this.totalItems / this.itemsPerPage);
+}
+
+getStartIndex(): number {
+  return ((this.currentPage - 1) * this.itemsPerPage) + 1;
+}
+
+getEndIndex(): number {
+  const endIndex = this.currentPage * this.itemsPerPage;
+  return endIndex > this.totalItems ? this.totalItems : endIndex;
+}
+
+getPageNumbers(): number[] {
+  const totalPages = this.getTotalPages();
+  const pages: number[] = [];
+  
+  if (totalPages <= 7) {
+    // Show all pages if 7 or fewer
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+  } else {
+    // Show smart pagination with ellipsis logic
+    const maxPagesToShow = 5;
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxPagesToShow / 2));
+    let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+    
+    // Adjust start page if we're near the end
+    if (endPage - startPage + 1 < maxPagesToShow) {
+      startPage = Math.max(1, endPage - maxPagesToShow + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+  }
+  
+  return pages;
+}
+
+// Update your existing onPageChange method to include validation
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadCatalogs();
+    // Reset expanded row when changing page
+    this.expandedCatalogId = null;
+    this.catalogDetails = null;
+  }
+
+// Update your loadCatalogs method to fix the API call
+
 
 }
