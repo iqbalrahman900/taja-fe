@@ -29,22 +29,26 @@ export class UpdateSongwriterComponent implements OnInit {
     // Add debug logging to check the songwriter data
     console.log('Songwriter received:', this.songwriter);
     console.log('IC Number value:', this.songwriter.icNumber);
+    console.log('MACP value:', this.songwriter.macp);
     
     this.initializeForm();
     
     // Add debug logging after form initialization
     console.log('Form values after initialization:', this.songwriterForm.value);
     console.log('IC Number in form:', this.songwriterForm.get('icNumber')?.value);
+    console.log('MACP in form:', this.songwriterForm.get('macp')?.value);
   }
 
   createForm(): FormGroup {
     return this.fb.group({
       name: ['', [Validators.required]],
       contactNumber: ['', [Validators.required]],
-      // Changed: Remove required validator from icNumber since it's optional in the interface
       icNumber: [''],
+      tinNumber: [''],
       email: ['', [Validators.required, Validators.email]],
+      address: [''],
       dateOfBirth: ['', [Validators.required]],
+      macp: [false], // MACP checkbox field
       penNames: this.fb.array([]),
       contract: this.fb.group({
         type: ['', Validators.required],
@@ -99,15 +103,18 @@ export class UpdateSongwriterComponent implements OnInit {
 
       // Explicit debug logging before patching values
       console.log('About to patch form with icNumber:', this.songwriter.icNumber);
+      console.log('About to patch form with MACP:', this.songwriter.macp);
       
       // Set form values
       this.songwriterForm.patchValue({
         name: this.songwriter.name,
         contactNumber: this.songwriter.contactNumber,
-        // Ensure icNumber is explicitly set and being logged
         icNumber: this.songwriter.icNumber || '',
+        tinNumber: this.songwriter.tinNumber || '',
         email: this.songwriter.email,
+        address: this.songwriter.address || '',
         dateOfBirth: dob,
+        macp: this.songwriter.macp || false, // MACP field initialization
         contract: {
           type: this.songwriter.contract?.type || '',
           startDate: startDate,
@@ -125,6 +132,7 @@ export class UpdateSongwriterComponent implements OnInit {
       // Extra verification after patching
       console.log('Form values after patch:', this.songwriterForm.value);
       console.log('IC Number after patch:', this.songwriterForm.get('icNumber')?.value);
+      console.log('MACP after patch:', this.songwriterForm.get('macp')?.value);
     }
   }
 
@@ -162,6 +170,7 @@ export class UpdateSongwriterComponent implements OnInit {
     
     // Log the form value before submission
     console.log('Form value before submission:', this.songwriterForm.value);
+    console.log('MACP value being submitted:', this.songwriterForm.get('macp')?.value);
     
     this.loading = true;
     this.formError = '';

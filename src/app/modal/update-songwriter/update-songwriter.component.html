@@ -65,6 +65,29 @@
           >
         </div>
         <div class="col-md-6">
+          <label for="tinNumber" class="form-label">TIN Number</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            id="tinNumber" 
+            formControlName="tinNumber"
+            placeholder="Enter TIN number"
+          >
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="address" class="form-label">Address</label>
+          <textarea 
+            class="form-control" 
+            id="address" 
+            formControlName="address"
+            placeholder="Enter full address"
+            rows="2"
+          ></textarea>
+        </div>
+        <div class="col-md-6">
           <label for="dateOfBirth" class="form-label">Date of Birth *</label>
           <input 
             type="date" 
@@ -76,18 +99,31 @@
           <div class="invalid-feedback" *ngIf="formSubmitted && songwriterForm.get('dateOfBirth')?.errors?.['required']">
             Date of birth is required
           </div>
+          <div class="mt-3">
+            <div class="form-check">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="macp" 
+                formControlName="macp"
+              >
+              <label class="form-check-label" for="macp">
+                MACP Member
+              </label>
+            </div>
+          </div>
         </div>
       </div>
       
       <div class="mb-3">
-        <label class="form-label">Pen Names *</label>
+        <label class="form-label">Pseudonym *</label>
         <div formArrayName="penNames">
           <div class="input-group mb-2" *ngFor="let penName of penNames.controls; let i = index" [formGroupName]="i">
             <input 
               type="text" 
               class="form-control" 
               formControlName="name"
-              placeholder="Pen name"
+              placeholder="Pseudonym"
               [ngClass]="{'is-invalid': formSubmitted && penNames.at(i).get('name')?.errors}"
             >
             <div class="input-group-text">
@@ -103,11 +139,11 @@
               <i class="fa fa-trash"></i>
             </button>
             <div class="invalid-feedback" *ngIf="formSubmitted && penNames.at(i).get('name')?.errors?.['required']">
-              Pen name is required
+              Pseudonym is required
             </div>
           </div>
           <button type="button" class="btn btn-outline-secondary btn-sm" (click)="addPenName()">
-            <i class="bi bi-plus-circle me-1"></i> Add Another Pen Name
+            <i class="bi bi-plus-circle me-1"></i> Add Another Pseudonym
           </button>
         </div>
       </div>
